@@ -161,6 +161,12 @@ class User(BaseModel):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    voice_preference: Mapped[Optional["VoicePreference"]] = relationship(
+        "VoicePreference",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("ix_users_email_lower", "email"),

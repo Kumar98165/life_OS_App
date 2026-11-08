@@ -192,6 +192,15 @@ export const AIAssistantScreen: React.FC = () => {
 
         <View style={styles.headerActions}>
           <TouchableOpacity
+            onPress={() => (navigation as any).navigate('VoiceAssistant')}
+            style={[styles.iconActionBtn, { borderColor: theme.colors.glassBorder }]}
+            accessibilityRole="button"
+            accessibilityLabel="Voice Assistant"
+          >
+            <Ionicons name="mic-outline" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             onPress={() => (navigation as any).navigate('AutomationDashboard')}
             style={[styles.iconActionBtn, { borderColor: theme.colors.glassBorder }]}
             accessibilityRole="button"

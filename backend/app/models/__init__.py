@@ -30,6 +30,7 @@ from app.models.automation import (
     AutomationApproval,
     AutomationExecutionLog,
 )
+from app.models.voice import VoicePreference
 from app.models.activity_log import ActivityLog
 
 __all__ = [
@@ -38,6 +39,7 @@ __all__ = [
     "User",
     "RefreshToken",
     "UserPreference",
+    "VoicePreference",
     "TaskCategory",
     "Task",
     "Goal",

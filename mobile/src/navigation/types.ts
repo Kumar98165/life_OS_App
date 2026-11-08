@@ -45,6 +45,8 @@ export type RootStackParamList = {
   AutomationDetail: { id: string };
   AutomationApproval: { approval: any };
   AutomationExecutionHistory: { executionId?: string } | undefined;
+  VoiceAssistant: undefined;
+  VoiceSettings: undefined;
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
