@@ -192,6 +192,15 @@ export const AIAssistantScreen: React.FC = () => {
 
         <View style={styles.headerActions}>
           <TouchableOpacity
+            onPress={() => (navigation as any).navigate('AutomationDashboard')}
+            style={[styles.iconActionBtn, { borderColor: theme.colors.glassBorder }]}
+            accessibilityRole="button"
+            accessibilityLabel="AI Automations"
+          >
+            <Ionicons name="flash-outline" size={20} color="#F59E0B" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
             onPress={() => (navigation as any).navigate('AIMemory')}
             style={[styles.iconActionBtn, { borderColor: theme.colors.glassBorder }]}
             accessibilityRole="button"

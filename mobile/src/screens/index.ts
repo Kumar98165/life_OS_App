@@ -14,6 +14,7 @@ export * from './ai/memory/AIMemoryScreen';
 export * from './finance';
 export * from './notifications';
 export * from './analytics';
+export * from './automations';
 export * from './placeholders/PlaceholderScreens';
 
 

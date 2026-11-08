@@ -14,6 +14,7 @@ from app.blueprints.ai_prompt import ai_prompt_bp
 from app.blueprints.finance import finance_bp
 from app.blueprints.notifications import notifications_bp
 from app.blueprints.analytics import analytics_bp
+from app.blueprints.automations import automations_bp
 
 def register_api_blueprints(app: Flask) -> None:
     """Register all API route blueprints to the Flask application."""
@@ -27,6 +28,7 @@ def register_api_blueprints(app: Flask) -> None:
     app.register_blueprint(finance_bp, url_prefix="/api/v1/finance")
     app.register_blueprint(notifications_bp, url_prefix="/api/v1/notifications")
     app.register_blueprint(analytics_bp, url_prefix="/api/v1/analytics")
+    app.register_blueprint(automations_bp, url_prefix="/api/v1/automations")
     app.register_blueprint(ai_bp, url_prefix="/api/v1/ai")
     app.register_blueprint(ai_memory_bp, url_prefix="/api/v1/ai/memories")
     app.register_blueprint(ai_feedback_bp, url_prefix="/api/v1/ai")

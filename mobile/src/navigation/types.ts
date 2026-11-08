@@ -40,6 +40,11 @@ export type RootStackParamList = {
   GoalsAnalytics: undefined;
   FinanceAnalytics: undefined;
   LifeInsights: undefined;
+  AutomationDashboard: undefined;
+  AutomationTemplates: undefined;
+  AutomationDetail: { id: string };
+  AutomationApproval: { approval: any };
+  AutomationExecutionHistory: { executionId?: string } | undefined;
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;

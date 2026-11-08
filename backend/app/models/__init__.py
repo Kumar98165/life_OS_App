@@ -23,6 +23,13 @@ from app.models.notification import (
     PushDeviceToken,
     NotificationDelivery,
 )
+from app.models.automation import (
+    AutomationDefinition,
+    AutomationExecution,
+    AutomationAction,
+    AutomationApproval,
+    AutomationExecutionLog,
+)
 from app.models.activity_log import ActivityLog
 
 __all__ = [
@@ -55,5 +62,10 @@ __all__ = [
     "Reminder",
     "PushDeviceToken",
     "NotificationDelivery",
+    "AutomationDefinition",
+    "AutomationExecution",
+    "AutomationAction",
+    "AutomationApproval",
+    "AutomationExecutionLog",
     "ActivityLog",
 ]

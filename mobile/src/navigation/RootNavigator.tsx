@@ -28,6 +28,11 @@ import {
   GoalsAnalyticsScreen,
   FinanceAnalyticsScreen,
   LifeInsightsScreen,
+  AutomationDashboardScreen,
+  AutomationTemplatesScreen,
+  AutomationDetailScreen,
+  AutomationApprovalScreen,
+  AutomationExecutionHistoryScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 
@@ -167,6 +172,31 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="LifeInsights"
               component={LifeInsightsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AutomationDashboard"
+              component={AutomationDashboardScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AutomationTemplates"
+              component={AutomationTemplatesScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AutomationDetail"
+              component={AutomationDetailScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AutomationApproval"
+              component={AutomationApprovalScreen}
+              options={{ animation: 'slide_from_bottom' }}
+            />
+            <Stack.Screen
+              name="AutomationExecutionHistory"
+              component={AutomationExecutionHistoryScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>

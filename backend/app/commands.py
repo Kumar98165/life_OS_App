@@ -45,3 +45,17 @@ def register_commands(app: Flask) -> None:
         db.session.commit()
         click.echo(f"Success: Administrator '{cleaned_email}' demoted to user (role='user').")
 
+    @app.cli.group("automations")
+    def automations_group():
+        """Automation background scheduler and execution commands."""
+        pass
+
+    @automations_group.command("run-scheduled")
+    def run_scheduled():
+        """Execute due scheduled automations across active users."""
+        from app.services.automation_service import AutomationService
+        service = AutomationService()
+        click.echo("Scanning and executing scheduled automations...")
+        executed = service.run_scheduled_automations()
+        click.echo(f"Completed execution of {executed} scheduled automation run(s).")
+
