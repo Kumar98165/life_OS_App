@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -289,6 +290,10 @@ export const NotificationCenterScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderNotificationItem}
             contentContainerStyle={styles.listContent}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews={Platform.OS !== 'web'}
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}

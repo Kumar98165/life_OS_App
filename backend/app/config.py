@@ -24,6 +24,15 @@ class BaseConfig:
     ]
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
+    # Rate limiting configuration
+    RATELIMIT_DEFAULT = [
+        limit.strip()
+        for limit in os.getenv("RATELIMIT_DEFAULT", "1000 per hour,100 per minute").split(",")
+        if limit.strip()
+    ]
+    RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+    RATELIMIT_STRATEGY = os.getenv("RATELIMIT_STRATEGY", "fixed-window")
+
     # Database connection pool settings
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_size": int(os.getenv("DB_POOL_SIZE", 10)),
@@ -38,7 +47,6 @@ class BaseConfig:
     OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "60"))
     OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.7"))
     OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "1024"))
-
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""

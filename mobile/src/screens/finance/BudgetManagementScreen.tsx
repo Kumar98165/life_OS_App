@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -240,6 +241,10 @@ export const BudgetManagementScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderBudgetItem}
             contentContainerStyle={styles.listContent}
+            initialNumToRender={8}
+            maxToRenderPerBatch={6}
+            windowSize={5}
+            removeClippedSubviews={Platform.OS !== 'web'}
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}

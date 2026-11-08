@@ -6,6 +6,7 @@ import {
   TextInput,
   FlatList,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -189,6 +190,10 @@ export const TransactionHistoryScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderTransactionItem}
             contentContainerStyle={styles.listContent}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={7}
+            removeClippedSubviews={Platform.OS !== 'web'}
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}

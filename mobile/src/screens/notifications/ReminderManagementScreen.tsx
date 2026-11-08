@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -216,6 +217,10 @@ export const ReminderManagementScreen: React.FC = () => {
             keyExtractor={(item) => item.id}
             renderItem={renderReminderItem}
             contentContainerStyle={styles.listContent}
+            initialNumToRender={12}
+            maxToRenderPerBatch={8}
+            windowSize={5}
+            removeClippedSubviews={Platform.OS !== 'web'}
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}
