@@ -1,0 +1,332 @@
+openapi: 3.1.0
+info:
+  title: LifeOS – AI Personal Operating System API
+  version: 1.0.0
+  description: Enterprise REST API for LifeOS mobile and local clients, featuring secure authentication, token rotation, user profile management, and health/readiness monitoring.
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local Development Server
+  - url: https://api.lifeos.io/api/v1
+    description: Production Server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter the JWT access token obtained via /auth/login or /auth/register.
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Operation successful
+        data:
+          type: object
+        meta:
+          type: object
+          nullable: true
+      required:
+        - success
+        - message
+        - data
+
+    ApiError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+        code:
+          type: string
+          example: VALIDATION_ERROR
+      required:
+        - success
+        - message
+        - errors
+        - code
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@lifeos.io
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          example: SecurePass123
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Alex Mercer
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@lifeos.io
+        password:
+          type: string
+          format: password
+          example: SecurePass123
+
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Alex Mercer
+        avatar_url:
+          type: string
+          maxLength: 500
+          nullable: true
+          example: https://lifeos.io/avatars/user1.png
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TokensResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+paths:
+  /health:
+    get:
+      summary: Service Liveness Probe
+      description: Returns service status to indicate whether the HTTP process is running.
+      responses:
+        '200':
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /ready:
+    get:
+      summary: Service Readiness Probe
+      description: Checks live connectivity to PostgreSQL 18 database.
+      responses:
+        '200':
+          description: Service and database are connected and ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '503':
+          description: Database connectivity check failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/register:
+    post:
+      summary: User Registration
+      description: Create a new account with email, password, and full name. Returns user profile and JWT pair.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Email already in use.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: Input validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/login:
+    post:
+      summary: User Login
+      description: Authenticate with email and password to receive JWT tokens.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Invalid email or password credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/refresh:
+    post:
+      summary: Refresh Token Rotation
+      description: Exchanges a valid JWT refresh token for a rotated access and refresh token pair.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Access and refresh tokens rotated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Refresh token invalid, expired, or revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/logout:
+    post:
+      summary: Logout / Revoke Token
+      description: Revokes the current refresh token JTI in the database.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/me:
+    get:
+      summary: Get Current User Profile
+      description: Fetches the authenticated user's profile using the Bearer access token.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Missing or invalid authentication token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /users/me:
+    get:
+      summary: Get User Profile (User Namespace)
+      description: Fetches current authenticated user profile.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    patch:
+      summary: Update User Profile
+      description: Update permitted profile fields (full_name, avatar_url).
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '422':
+          description: Extra or invalid fields supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
