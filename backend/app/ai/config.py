@@ -1,27 +1,55 @@
-"""LifeOS - Local LLM Configuration and Runtime Connector.
+"""LifeOS - Dynamic AI Runtime Configuration Provider (Step 10).
 
-Configures connection to local Ollama instance with fallback health checks
-and initialization of local ChatOllama model (Qwen 2.5 3B).
+Allows AI services (Chat, Personal Intelligence, Tools) to dynamically resolve
+the currently active AIModelVersion from PostgreSQL, falling back cleanly to
+environment variables or Flask app config.
 """
 import os
 import requests
 from typing import Dict, Any, Optional
-from langchain_ollama import ChatOllama
 from flask import current_app
+from langchain_ollama import ChatOllama
+
+
+class AIRuntimeConfig:
+    """Manages active AI runtime configuration with database persistence."""
+
+    _active_model_override: Optional[str] = None
+
+    @classmethod
+    def set_runtime_override(cls, model_tag: Optional[str]) -> None:
+        """In-memory override primarily for unit tests or immediate hot-swapping."""
+        cls._active_model_override = model_tag
+
+    @classmethod
+    def get_active_model_tag(cls) -> str:
+        """Resolve active model tag: in-memory override -> database active model -> env var -> default."""
+        if cls._active_model_override:
+            return cls._active_model_override
+
+        try:
+            from app.repositories.ai_model_version_repository import AIModelVersionRepository
+            repo = AIModelVersionRepository()
+            active_model = repo.get_active_model()
+            if active_model and active_model.model_tag:
+                return active_model.model_tag
+        except Exception:
+            # Fallback gracefully if database or table is unavailable during initialization
+            pass
+
+        if current_app:
+            return current_app.config.get("OLLAMA_MODEL", "qwen2.5:3b")
+        return os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
 
 
 def get_ai_config() -> Dict[str, Any]:
-    """Retrieve active AI settings from Flask app config or environment variables."""
+    """Retrieve active AI settings with dynamic active model resolution."""
     base_url = (
         current_app.config.get("OLLAMA_BASE_URL")
         if current_app
         else os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     )
-    model = (
-        current_app.config.get("OLLAMA_MODEL")
-        if current_app
-        else os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-    )
+    model = AIRuntimeConfig.get_active_model_tag()
     timeout = (
         current_app.config.get("OLLAMA_TIMEOUT")
         if current_app
@@ -68,7 +96,6 @@ def check_ollama_health() -> Dict[str, Any]:
         models = [m.get("name", "") for m in data.get("models", [])]
         target_model = cfg["model"]
 
-        # Check if configured model or prefix matches
         model_found = any(
             target_model == m or target_model == m.split(":")[0] or m.startswith(target_model)
             for m in models
@@ -107,4 +134,3 @@ def get_llm(
         temperature=temperature if temperature is not None else cfg["temperature"],
         timeout=timeout if timeout is not None else cfg["timeout"]
     )
-

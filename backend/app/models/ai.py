@@ -653,3 +653,153 @@ class AIMemory(BaseModel):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+class AIModelVersion(BaseModel):
+    """Registered AI Model version tracking lifecycle, evaluation metrics, and active runtime state."""
+    __tablename__ = "ai_model_versions"
+
+    model_tag: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True
+    )  # e.g., 'qwen2.5:3b', 'qwen2.5:3b-lifeos:v1'
+    base_model: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="Qwen/Qwen2.5-3B-Instruct"
+    )
+    version_tag: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        index=True
+    )  # semantic version tag, e.g. 'v1.0.0'
+    training_run_id: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        index=True
+    )
+    dataset_version: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True
+    )
+    artifact_checksum: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )  # SHA-256 checksum of adapter or GGUF
+    status: Mapped[str] = mapped_column(
+        String(30),
+        default="registered",
+        nullable=False
+    )  # registered, candidate, evaluated, approved, active, rejected, archived
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+    evaluation_score: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True
+    )
+    evaluation_report_path: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+    approved_by: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    activated_by: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    activated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_ai_model_versions_status", "status"),
+        Index("ix_ai_model_versions_active", "is_active"),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "model_tag": self.model_tag,
+            "base_model": self.base_model,
+            "version_tag": self.version_tag,
+            "training_run_id": self.training_run_id,
+            "dataset_version": self.dataset_version,
+            "artifact_checksum": self.artifact_checksum,
+            "status": self.status,
+            "is_active": self.is_active,
+            "evaluation_score": self.evaluation_score,
+            "evaluation_report_path": self.evaluation_report_path,
+            "approved_by": self.approved_by,
+            "approved_at": self.approved_at.isoformat() if self.approved_at else None,
+            "activated_by": self.activated_by,
+            "activated_at": self.activated_at.isoformat() if self.activated_at else None,
+            "notes": self.notes,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class AIModelRollbackLog(BaseModel):
+    """Audit log tracking model activation and rollback events."""
+    __tablename__ = "ai_model_rollback_logs"
+
+    from_model_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("ai_model_versions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    to_model_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("ai_model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    action: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False
+    )  # 'activation', 'rollback'
+    reason: Mapped[str] = mapped_column(
+        Text,
+        nullable=False
+    )
+    executed_by: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    __table_args__ = (
+        Index("ix_ai_model_rollback_logs_action", "action"),
+        Index("ix_ai_model_rollback_logs_created", "created_at"),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "from_model_id": self.from_model_id,
+            "to_model_id": self.to_model_id,
+            "action": self.action,
+            "reason": self.reason,
+            "executed_by": self.executed_by,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+

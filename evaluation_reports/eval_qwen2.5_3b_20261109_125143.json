@@ -1,0 +1,855 @@
+{
+  "status": "completed",
+  "model_name": "qwen2.5:3b",
+  "benchmark_version": "v1.0.0-lifeos-bench",
+  "benchmark_checksum": "f0ed8d846db017c5ef40160f49ea49c6955418312ce486e207781b12fc526761",
+  "started_at": "2026-11-09T12:43:36.876236+00:00",
+  "completed_at": "2026-11-09T12:51:43.942566+00:00",
+  "execution_duration_sec": 487.06,
+  "total_test_cases": 13,
+  "passed_test_cases": 9,
+  "failed_test_cases_count": 4,
+  "aggregate_metrics": {
+    "overall_score": 0.785,
+    "pass_rate": 0.69,
+    "average_latency_ms": 37305.39,
+    "tokens_per_second": 4.62
+  },
+  "category_summary": {
+    "daily_planning": {
+      "count": 2,
+      "avg_score": 0.38,
+      "pass_rate": 0.0
+    },
+    "task_management": {
+      "count": 2,
+      "avg_score": 1.0,
+      "pass_rate": 1.0
+    },
+    "goal_setting": {
+      "count": 2,
+      "avg_score": 0.93,
+      "pass_rate": 1.0
+    },
+    "habit_coaching": {
+      "count": 2,
+      "avg_score": 0.57,
+      "pass_rate": 0.5
+    },
+    "productivity_assistance": {
+      "count": 1,
+      "avg_score": 1.0,
+      "pass_rate": 1.0
+    },
+    "instruction_following": {
+      "count": 1,
+      "avg_score": 1.0,
+      "pass_rate": 1.0
+    },
+    "context_understanding": {
+      "count": 1,
+      "avg_score": 1.0,
+      "pass_rate": 1.0
+    },
+    "response_accuracy": {
+      "count": 1,
+      "avg_score": 0.88,
+      "pass_rate": 1.0
+    },
+    "personalization": {
+      "count": 1,
+      "avg_score": 0.57,
+      "pass_rate": 0.0
+    }
+  },
+  "failed_cases": [
+    {
+      "id": "bench-plan-001",
+      "category": "daily_planning",
+      "score": 0.15,
+      "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=60)",
+      "reasoning": [
+        "Response was empty or blank.",
+        "Empty response violated all instructions.",
+        "Response is too brief (0 chars vs 80 min required)."
+      ]
+    },
+    {
+      "id": "bench-plan-002",
+      "category": "daily_planning",
+      "score": 0.6,
+      "error": null,
+      "reasoning": [
+        "Matched 1 of 4 expected domain keywords.",
+        "Missing required numbered list format."
+      ]
+    },
+    {
+      "id": "bench-habit-002",
+      "category": "habit_coaching",
+      "score": 0.15,
+      "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=60)",
+      "reasoning": [
+        "Response was empty or blank.",
+        "Empty response violated all instructions.",
+        "Response is too brief (0 chars vs 60 min required)."
+      ]
+    },
+    {
+      "id": "bench-pers-001",
+      "category": "personalization",
+      "score": 0.57,
+      "error": null,
+      "reasoning": [
+        "Matched 1 of 5 expected domain keywords.",
+        "Referenced 0 key contextual tokens from provided profile."
+      ]
+    }
+  ],
+  "individual_results": [
+    {
+      "test_id": "bench-plan-001",
+      "category": "daily_planning",
+      "prompt": "Create a realistic daily plan for a working professional between 9:00 AM and 5:00 PM with focus blocks and lunch.",
+      "context": null,
+      "response_text": "",
+      "latency_ms": 62051.19,
+      "token_count": 0,
+      "tokens_per_sec": 0.0,
+      "is_success": false,
+      "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=60)",
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Response was empty or blank.",
+          "details": {
+            "matched": [],
+            "total_expected": 5
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Empty response violated all instructions.",
+          "details": {}
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Response is too brief (0 chars vs 80 min required).",
+          "details": {
+            "actual_chars": 0,
+            "min_required": 80
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.15
+    },
+    {
+      "test_id": "bench-plan-002",
+      "category": "daily_planning",
+      "prompt": "I only have 30 minutes free today between meetings. Give me a 3-step decompression and quick triage routine.",
+      "context": null,
+      "response_text": "Absolutely, here\u2019s a quick 3-step decompression and quick triage routine designed to help you manage your time effectively and find some peace amidst your busy schedule:\n\n### Step 1: Quick Breathing and Mindfulness Exercise\n- **Purpose:** To calm your mind and reduce stress.\n- **Activity:** Find a quiet place to sit comfortably. Close your eyes and take a few deep breaths. Focus on the sensation of air entering and exiting your nostrils. As you inhale, imagine breathing in calmness and peace. As you exhale, imagine breathing out tension and stress. Continue for about 5 minutes.\n\n### Step 2: Quick Triage of Tasks\n- **Purpose:** To prioritize and organize your tasks for the remainder of your meeting time.\n- **Activity:** Quickly review any tasks or emails that you need to address during your meetings. Prioritize them based on urgency and importance. Consider which tasks can be delegated or postponed. Make a list of the most critical tasks you need to handle and set a time limit for each. For example, you might allocate 10 minutes for each task.\n\n### Step 3: Quick Stretching or Light Exercise\n- **Purpose:** To energize your body and mind.\n- **Activity:** Stand up and perform a few stretches. This could include reaching your arms above your head, gently stretching your neck, shoulders, and legs. You can also do some light arm circles or leg swings to increase blood flow and reduce stiffness. Spend about 5-10 minutes on this.\n\n### Summary\n- **Total Time:** Approximately 15-20 minutes.\n- **Purpose:** To help you mentally and physically prepare for your meetings, manage your time more effectively, and ensure you're ready to tackle your tasks with a clear and refreshed mind.\n\nFeel free to adjust the time spent on each step based on your personal comfort and the urgency of your tasks.",
+      "latency_ms": 62404.99,
+      "token_count": 389,
+      "tokens_per_sec": 6.74,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.25,
+          "passed": false,
+          "reasoning": "Matched 1 of 4 expected domain keywords.",
+          "details": {
+            "matched": [
+              "minute"
+            ],
+            "total_expected": 4
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 0.6,
+          "passed": false,
+          "reasoning": "Missing required numbered list format.",
+          "details": {
+            "reasons": [
+              "Missing required numbered list format."
+            ]
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (1806 chars) meets minimum requirement (60 chars).",
+          "details": {
+            "actual_chars": 1806,
+            "min_required": 60
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.6
+    },
+    {
+      "test_id": "bench-task-001",
+      "category": "task_management",
+      "prompt": "Prioritize these three tasks using the Eisenhower Matrix: 1. Server crash in production, 2. Quarterly strategy brainstorm, 3. Sorting inbox spam.",
+      "context": null,
+      "response_text": "Certainly! The Eisenhower Matrix is a tool used to prioritize tasks based on their urgency and importance. Here's how you can prioritize the three tasks you provided:\n\n1. **Server crash in production**\n   - **Urgency**: High\n   - **Importance**: High\n\n2. **Quarterly strategy brainstorm**\n   - **Urgency**: Medium\n   - **Importance**: High\n\n3. **Sorting inbox spam**\n   - **Urgency**: Low\n   - **Importance**: Medium\n\nBased on the Eisenhower Matrix, the tasks can be prioritized as follows:\n\n1. **Server crash in production** - This task should be addressed immediately as it is both urgent and important.\n2. **Quarterly strategy brainstorm** - This task is important but not as urgent as the server crash, so it should be scheduled for a future time.\n3. **Sorting inbox spam** - This task is neither urgent nor important, so it can be deferred or delegated.\n\nIf you need further assistance or have any other tasks to prioritize, feel free to ask!",
+      "latency_ms": 34205.11,
+      "token_count": 218,
+      "tokens_per_sec": 7.17,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 5 of 5 expected domain keywords.",
+          "details": {
+            "matched": [
+              "urgent",
+              "important",
+              "production",
+              "crash",
+              "spam"
+            ],
+            "total_expected": 5
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (947 chars) meets minimum requirement (70 chars).",
+          "details": {
+            "actual_chars": 947,
+            "min_required": 70
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-task-002",
+      "category": "task_management",
+      "prompt": "Break down the task 'File personal income taxes' into 4 sequential actionable subtasks.",
+      "context": null,
+      "response_text": "Certainly! Here are four sequential actionable subtasks to help you break down the task of \"File personal income taxes\":\n\n1. **Gather Necessary Documentation**: Collect all necessary documents and records, such as W-2 forms, 1099-MISC forms, receipts, and any other relevant financial statements. Ensure all documents are organized and up-to-date.\n\n2. **Review Tax Forms and Instructions**: Review the latest tax forms (e.g., Form 1040 for individuals) and any accompanying instructions. Understand the requirements and deadlines for filing your taxes.\n\n3. **Calculate Tax Liability**: Use the provided forms and your gathered documentation to calculate your tax liability. This may involve figuring out your total income, subtracting any deductions and credits, and determining the tax owed or refund due.\n\n4. **Prepare and File Your Taxes**: Input your calculated information into the appropriate tax software or form, such as TurboTax or H&R Block. Review your entries for accuracy and completeness, then submit your completed tax return to the appropriate tax authority, such as the IRS in the United States.\n\nFollow these steps in order to ensure a thorough and accurate tax filing process.",
+      "latency_ms": 36444.43,
+      "token_count": 236,
+      "tokens_per_sec": 7.12,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 6 of 6 expected domain keywords.",
+          "details": {
+            "matched": [
+              "1.",
+              "2.",
+              "3.",
+              "4.",
+              "document",
+              "file"
+            ],
+            "total_expected": 6
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (1195 chars) meets minimum requirement (60 chars).",
+          "details": {
+            "actual_chars": 1195,
+            "min_required": 60
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-goal-001",
+      "category": "goal_setting",
+      "prompt": "Turn the vague goal 'I want to read more books' into a SMART goal with specific milestones.",
+      "context": null,
+      "response_text": "To turn the vague goal 'I want to read more books' into a SMART goal with specific milestones, we need to make it Specific, Measurable, Achievable, Relevant, and Time-bound. Here's how we can do it:\n\n**SMART Goal:** \"I aim to read at least 50 books within the next 12 months, with a goal of reading 10 books per quarter, starting from the first quarter of 2023.\"\n\n**Milestones:**\n\n1. **Quarter 1 (2023):** Read 10 books.\n2. **Quarter 2 (2023):** Read 10 books.\n3. **Quarter 3 (2023):** Read 10 books.\n4. **Quarter 4 (2023):** Read 10 books.\n5. **Quarter 1 (2024):** Read 10 books.\n6. **Quarter 2 (2024):** Read 10 books.\n7. **Quarter 3 (2024):** Read 10 books.\n8. **Quarter 4 (2024):** Read 10 books.\n\nThis goal is now Specific (clear and defined), Measurable (with the number of books to be read), Achievable (given the timeframe and the number of books to be read), Relevant (aligned with the goal of reading more books), and Time-bound (with a specific timeframe of 12 months).",
+      "latency_ms": 48439.42,
+      "token_count": 316,
+      "tokens_per_sec": 7.01,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.83,
+          "passed": true,
+          "reasoning": "Matched 5 of 6 expected domain keywords.",
+          "details": {
+            "matched": [
+              "specific",
+              "measurable",
+              "achievable",
+              "time",
+              "month"
+            ],
+            "total_expected": 6
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (980 chars) meets minimum requirement (80 chars).",
+          "details": {
+            "actual_chars": 980,
+            "min_required": 80
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.94
+    },
+    {
+      "test_id": "bench-goal-002",
+      "category": "goal_setting",
+      "prompt": "Define three milestones for a 6-month goal of running a 10K race.",
+      "context": null,
+      "response_text": "Running a 10K race is a significant personal achievement, and setting milestones to achieve this goal is a great way to stay motivated and organized. Here are three key milestones to consider for a 6-month goal of running a 10K race:\n\n### Milestone 1: Establishing a Training Schedule\n- **Objective:** By the end of the first month, establish a consistent training schedule that includes at least three running sessions per week, with a focus on gradually increasing the distance and intensity.\n- **Activities to Focus On:** Begin by setting up a training plan that includes a mix of running, strength training, and rest days. Ensure that the plan is realistic and achievable, considering your current fitness level and any existing health conditions.\n\n### Milestone 2: Building Endurance and Stamina\n- **Objective:** By the end of the third month, have built up endurance and stamina through longer runs and incorporating interval training into your weekly schedule.\n- **Activities to Focus On:** Increase the distance of your runs, aiming for at least one long run per week (e.g., 5K to 10K) and incorporate interval training (short bursts of high-intensity running followed by recovery periods) to improve your overall endurance and speed.\n\n### Milestone 3: Fine-Tuning and Consistency\n- **Objective:** By the end of the sixth month, ensure consistent training, maintain a healthy diet, and start tapering off your training to prepare for the race.\n- **Activities to Focus On:** Continue to monitor your progress and adjust your training plan as needed. Focus on maintaining a balanced diet that supports your training, and start reducing the intensity of your runs to allow your body to recover. This will help you enter the race in peak physical condition.\n\nThese milestones provide a structured approach to achieving your goal of running a 10K race within six months. Remember to listen to your body and adjust your training plan as necessary to avoid injury and ensure you are fully prepared for the race. Good luck!",
+      "latency_ms": 60117.02,
+      "token_count": 410,
+      "tokens_per_sec": 7.22,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.75,
+          "passed": true,
+          "reasoning": "Matched 3 of 4 expected domain keywords.",
+          "details": {
+            "matched": [
+              "milestone",
+              "month",
+              "run"
+            ],
+            "total_expected": 4
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (2023 chars) meets minimum requirement (60 chars).",
+          "details": {
+            "actual_chars": 2023,
+            "min_required": 60
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.91
+    },
+    {
+      "test_id": "bench-habit-001",
+      "category": "habit_coaching",
+      "prompt": "I keep forgetting to drink water while working at my desk. Suggest a habit loop (cue, routine, reward) to build hydration.",
+      "context": null,
+      "response_text": "Certainly! Building a habit loop for staying hydrated can be a great way to ensure you drink enough water throughout the day. Here's a suggested habit loop for you:\n\n**Cue:** \n- **Time:** Set a specific time every hour to check your water bottle or sip from it. For example, you might decide to take a sip of water every 60 minutes.\n\n**Routine:** \n- **Action:** Take a sip of water from your water bottle. Aim for at least 50-60 ml (1.7-2.0 oz) per sip, which is a good amount to keep you hydrated.\n\n**Reward:** \n- **Positive Reinforcement:** After taking a sip, set a small, positive reminder for yourself. This could be a quick glance at your water bottle, a gentle reminder on your screen, or even a small, satisfying sound (like a chime or a beep) that you can set to remind you to take a sip. This reward reinforces the habit and makes it more enjoyable.\n\nBy following this habit loop, you can create a consistent routine that helps you remember to drink water, even when you're busy at your desk.",
+      "latency_ms": 37170.74,
+      "token_count": 239,
+      "tokens_per_sec": 7.3,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 4 of 4 expected domain keywords.",
+          "details": {
+            "matched": [
+              "cue",
+              "routine",
+              "reward",
+              "water"
+            ],
+            "total_expected": 4
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (1002 chars) meets minimum requirement (60 chars).",
+          "details": {
+            "actual_chars": 1002,
+            "min_required": 60
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-habit-002",
+      "category": "habit_coaching",
+      "prompt": "How can I restart my meditation habit after missing 4 consecutive days without feeling demotivated?",
+      "context": null,
+      "response_text": "",
+      "latency_ms": 62035.19,
+      "token_count": 0,
+      "tokens_per_sec": 0.0,
+      "is_success": false,
+      "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=60)",
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Response was empty or blank.",
+          "details": {
+            "matched": [],
+            "total_expected": 4
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Empty response violated all instructions.",
+          "details": {}
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Response is too brief (0 chars vs 60 min required).",
+          "details": {
+            "actual_chars": 0,
+            "min_required": 60
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.15
+    },
+    {
+      "test_id": "bench-prod-001",
+      "category": "productivity_assistance",
+      "prompt": "Explain the Pomodoro Technique in 3 short bullet points, including work duration, short break, and long break.",
+      "context": null,
+      "response_text": "- The Pomodoro Technique involves working for a set period, typically 25 minutes, followed by a short break of 5 minutes.\n- After four consecutive work intervals, a longer break of 15 to 30 minutes is taken to recharge.\n- This method helps maintain focus and reduces mental fatigue by alternating between work sessions and short breaks.",
+      "latency_ms": 13278.79,
+      "token_count": 73,
+      "tokens_per_sec": 7.44,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 5 of 5 expected domain keywords.",
+          "details": {
+            "matched": [
+              "25",
+              "5",
+              "break",
+              "pomodoro",
+              "minutes"
+            ],
+            "total_expected": 5
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (336 chars) meets minimum requirement (50 chars).",
+          "details": {
+            "actual_chars": 336,
+            "min_required": 50
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-instr-001",
+      "category": "instruction_following",
+      "prompt": "List exactly 3 benefits of deep work. Respond ONLY with a numbered list (1., 2., 3.). Do not include any introduction or conclusion text.",
+      "context": null,
+      "response_text": "1. Increased productivity: Deep work allows for focused and uninterrupted work, leading to higher efficiency and output.\n2. Enhanced quality of work: When engaged in deep work, tasks are completed with greater attention to detail and innovation, resulting in higher quality outcomes.\n3. Improved mental well-being: Dedication to deep work can reduce feelings of burnout and stress, contributing to better mental health and overall well-being.",
+      "latency_ms": 16677.0,
+      "token_count": 83,
+      "tokens_per_sec": 6.86,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 3 of 3 expected domain keywords.",
+          "details": {
+            "matched": [
+              "1.",
+              "2.",
+              "3."
+            ],
+            "total_expected": 3
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (442 chars) meets minimum requirement (30 chars).",
+          "details": {
+            "actual_chars": 442,
+            "min_required": 30
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-ctx-001",
+      "category": "context_understanding",
+      "prompt": "Based on my profile, when is the best time for me to schedule a 3-hour uninterrupted deep coding block?",
+      "context": "User profile: Software developer, works from 10:00 to 18:00, avoids morning meetings, prefers asynchronous communication.",
+      "response_text": "Given your profile as a software developer who works from 10:00 to 18:00 and prefers avoiding morning meetings and asynchronous communication, the best time for you to schedule a 3-hour uninterrupted deep coding block would be in the afternoon, ideally around 14:00 to 17:00. This time slot aligns with your work schedule and avoids the morning period, ensuring you can engage in asynchronous communication if necessary.",
+      "latency_ms": 16724.04,
+      "token_count": 95,
+      "tokens_per_sec": 8.08,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Matched 5 of 5 expected domain keywords.",
+          "details": {
+            "matched": [
+              "morning",
+              "10:00",
+              "coding",
+              "uninterrupted",
+              "afternoon"
+            ],
+            "total_expected": 5
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (420 chars) meets minimum requirement (40 chars).",
+          "details": {
+            "actual_chars": 420,
+            "min_required": 40
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Referenced 11 key contextual tokens from provided profile.",
+          "details": {
+            "matched_tokens": [
+              "developer",
+              "prefers",
+              "meetings",
+              "profile",
+              "software"
+            ]
+          }
+        }
+      },
+      "overall_score": 1.0
+    },
+    {
+      "test_id": "bench-acc-001",
+      "category": "response_accuracy",
+      "prompt": "Is a task with high urgency and low importance classified as Quadrant 1, Quadrant 2, or Quadrant 3 in the Eisenhower Matrix?",
+      "context": null,
+      "response_text": "In the Eisenhower Matrix, tasks are categorized into four quadrants based on their urgency and importance. \n\n- **Quadrant 1**: Tasks that are both urgent and important. These should be given top priority.\n- **Quadrant 2**: Tasks that are important but not urgent. These can be scheduled for later.\n- **Quadrant 3**: Tasks that are urgent but not important. These should be delegated or eliminated if possible.\n- **Quadrant 4**: Tasks that are neither urgent nor important. These should be avoided.\n\nA task with high urgency but low importance would fall into **Quadrant 3**. It is urgent and needs immediate attention, but it is not important in the sense that it does not align with your long-term goals or values. \n\nTherefore, a task with high urgency and low importance would be classified as Quadrant 3.",
+      "latency_ms": 30383.02,
+      "token_count": 181,
+      "tokens_per_sec": 6.96,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.67,
+          "passed": true,
+          "reasoning": "Matched 2 of 3 expected domain keywords.",
+          "details": {
+            "matched": [
+              "quadrant 3",
+              "delegate"
+            ],
+            "total_expected": 3
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (807 chars) meets minimum requirement (20 chars).",
+          "details": {
+            "actual_chars": 807,
+            "min_required": 20
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "No context required for this case; context utilization passed by default.",
+          "details": {
+            "context_present": false
+          }
+        }
+      },
+      "overall_score": 0.88
+    },
+    {
+      "test_id": "bench-pers-001",
+      "category": "personalization",
+      "prompt": "Give me a quick tip to beat afternoon energy slump.",
+      "context": "User Memory: Prefers concise answers under 50 words, tone is direct and analytical.",
+      "response_text": "Snack on almonds or have a small protein bar.",
+      "latency_ms": 5039.19,
+      "token_count": 12,
+      "tokens_per_sec": 8.88,
+      "is_success": true,
+      "error": null,
+      "metrics": {
+        "answer_relevance": {
+          "metric_name": "answer_relevance",
+          "score": 0.2,
+          "passed": false,
+          "reasoning": "Matched 1 of 5 expected domain keywords.",
+          "details": {
+            "matched": [
+              "protein"
+            ],
+            "total_expected": 5
+          }
+        },
+        "instruction_following": {
+          "metric_name": "instruction_following",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Fully followed all structural and negative constraints.",
+          "details": {
+            "reasons": []
+          }
+        },
+        "response_completeness": {
+          "metric_name": "response_completeness",
+          "score": 1.0,
+          "passed": true,
+          "reasoning": "Response length (45 chars) meets minimum requirement (20 chars).",
+          "details": {
+            "actual_chars": 45,
+            "min_required": 20
+          }
+        },
+        "context_utilization": {
+          "metric_name": "context_utilization",
+          "score": 0.0,
+          "passed": false,
+          "reasoning": "Referenced 0 key contextual tokens from provided profile.",
+          "details": {
+            "matched_tokens": []
+          }
+        }
+      },
+      "overall_score": 0.57
+    }
+  ]
+}
