@@ -68,4 +68,48 @@ export interface PrivacyConsentStatus {
   updated_at?: string;
 }
 
+export interface ProactiveInsight {
+  id: string;
+  type: string;
+  category: 'schedule' | 'tasks' | 'habits' | 'goals' | 'planner';
+  severity: 'warning' | 'info' | 'nudge' | 'celebration' | 'suggestion';
+  title: string;
+  message: string;
+  actionable: boolean;
+  target_screen?: string;
+}
+
+export interface DailyBriefing {
+  user_id: string;
+  date: string;
+  timezone: string;
+  greeting: string;
+  schedule_summary: {
+    total_blocks: number;
+    has_conflicts: boolean;
+    conflicts: Array<{ block_1: string; block_2: string; time_overlap: string }>;
+    blocks: any[];
+  };
+  task_summary: {
+    total_today: number;
+    completed_today: number;
+    pending_priority_count: number;
+    approaching_deadlines_count: number;
+    today_tasks: any[];
+    top_pending: any[];
+    approaching_deadlines: any[];
+  };
+  habit_summary: {
+    total_habits: number;
+    completed_today: number;
+    habits: any[];
+  };
+  goal_summary: {
+    active_goals_count: number;
+    goals: any[];
+  };
+  priority_suggestions: string[];
+}
+
+
 

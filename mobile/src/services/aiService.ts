@@ -283,6 +283,27 @@ export const aiService = {
     >('/ai/privacy/purge');
     return response.data.data;
   },
+
+  /**
+   * Retrieve structured daily intelligence briefing.
+   */
+  async getDailyBriefing(): Promise<import('../types/ai').DailyBriefing> {
+    const response = await apiClient.get<ApiResponse<import('../types/ai').DailyBriefing>>(
+      '/ai/intelligence/briefing'
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Retrieve context-aware proactive insights and observations.
+   */
+  async getProactiveInsights(): Promise<import('../types/ai').ProactiveInsight[]> {
+    const response = await apiClient.get<ApiResponse<{ insights: import('../types/ai').ProactiveInsight[] }>>(
+      '/ai/intelligence/insights'
+    );
+    return response.data.data.insights;
+  },
 };
+
 
 

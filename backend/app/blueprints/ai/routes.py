@@ -7,10 +7,41 @@ from flask import Blueprint, request, Response, stream_with_context
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.schemas.ai import ChatRequest, CreateConversationRequest
 from app.services.ai_service import AIService
+from app.services.personal_intelligence_service import personal_intelligence_service
 from app.core.response import api_response
 
 ai_bp = Blueprint("ai", __name__)
 ai_service = AIService()
+
+
+# ---------------------------------------------------------
+# Personal Intelligence & Daily Briefing
+# ---------------------------------------------------------
+
+@ai_bp.route("/intelligence/briefing", methods=["GET"])
+@jwt_required()
+def get_daily_briefing():
+    """Retrieve structured daily intelligence briefing covering planner, tasks, habits, and goals."""
+    user_id = get_jwt_identity()
+    briefing = personal_intelligence_service.get_daily_briefing(user_id)
+    return api_response(
+        data=briefing,
+        message="Daily intelligence briefing retrieved successfully",
+        status_code=200
+    )
+
+
+@ai_bp.route("/intelligence/insights", methods=["GET"])
+@jwt_required()
+def get_proactive_insights():
+    """Retrieve deterministic, context-aware proactive insights and observations."""
+    user_id = get_jwt_identity()
+    insights = personal_intelligence_service.get_proactive_insights(user_id)
+    return api_response(
+        data={"insights": insights},
+        message="Proactive insights retrieved successfully",
+        status_code=200
+    )
 
 
 # ---------------------------------------------------------

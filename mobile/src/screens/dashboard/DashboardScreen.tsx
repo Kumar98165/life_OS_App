@@ -168,6 +168,7 @@ export const DashboardScreen: React.FC = () => {
           <AIQuickAccessCard
             key={id}
             onTalkToAI={() => navigation.navigate('AIAssistant')}
+            onNavigateScreen={(screen: string) => navigation.navigate(screen)}
           />
         );
       default:

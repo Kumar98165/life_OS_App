@@ -118,4 +118,21 @@ export function useAIUpdatePrivacyConsent() {
   });
 }
 
+export function useAIDailyBriefing() {
+  return useQuery({
+    queryKey: ['ai_daily_briefing'],
+    queryFn: () => aiService.getDailyBriefing(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useAIProactiveInsights() {
+  return useQuery({
+    queryKey: ['ai_proactive_insights'],
+    queryFn: () => aiService.getProactiveInsights(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+
 

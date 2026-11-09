@@ -47,9 +47,10 @@ CORE GUIDELINES:
 {memory_block}
 """
 def node_retrieve_context(state: LifeOSAgentState) -> Dict[str, Any]:
-    """Retrieve user-owned LifeOS domain context (Tasks, Goals, Habits, Schedule)."""
+    """Retrieve user-owned LifeOS domain context (Tasks, Goals, Habits, Schedule, Financials)."""
     engine = LifeOSContextEngine()
-    context_data = engine.build_user_context(state["user_id"])
+    query = state.get("user_message", "")
+    context_data = engine.build_user_context(state["user_id"], query=query)
     formatted_context = engine.format_context_prompt(context_data)
     return {
         "context_data": context_data,
@@ -135,10 +136,40 @@ def node_validate_response(state: LifeOSAgentState) -> Dict[str, Any]:
 
 
 def prepare_llm_messages(state: LifeOSAgentState) -> List[BaseMessage]:
-    """Helper to construct context-grounded messages for LLM invocation or streaming."""
+    """Helper to construct context-grounded messages for LLM invocation or streaming, tailored to user personalization."""
     template = state.get("prompt_template") or SYSTEM_PROMPT_TEMPLATE
     context_block = state.get("formatted_context", "")
     memory_block = state.get("formatted_memories", "")
+
+    # Tailor response directives based on user personalization if active
+    ctx_data = state.get("context_data", {})
+    personalization = ctx_data.get("personalization")
+    personalization_directives = []
+
+    if personalization:
+        pref_lang = personalization.get("preferred_language", "en")
+        if pref_lang == "hi":
+            personalization_directives.append("- Respond primarily in Hindi unless explicitly asked otherwise.")
+        elif pref_lang == "hinglish":
+            personalization_directives.append("- Respond in natural, conversational Hinglish (Hindi written in Roman script mixed with English).")
+        elif pref_lang not in ["en", "auto"]:
+            personalization_directives.append(f"- Respond in {pref_lang} unless the user writes in a different language.")
+
+        resp_len = personalization.get("ai_response_length", "medium")
+        if resp_len == "short":
+            personalization_directives.append("- Provide very brief, succinct responses. Avoid fluff or extensive preambles.")
+        elif resp_len == "comprehensive":
+            personalization_directives.append("- Provide thorough, detailed, and structured explanations with deep coverage.")
+
+        resp_style = personalization.get("ai_response_style", "concise")
+        if resp_style == "motivational":
+            personalization_directives.append("- Adopt an uplifting, inspiring, and energizing tone.")
+        elif resp_style == "formal":
+            personalization_directives.append("- Maintain an objective, professional, and corporate tone.")
+
+    if personalization_directives:
+        directives_block = "\nACTIVE USER COMMUNICATION PREFERENCES:\n" + "\n".join(personalization_directives)
+        context_block = f"{context_block}\n{directives_block}"
 
     try:
         system_text = template.format(
