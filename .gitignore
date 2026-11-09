@@ -76,3 +76,10 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 
+# AI Artifacts & Evaluation Reports
+evaluation_reports/
+training_artifacts/
+*.gguf
+*.bin
+
+
