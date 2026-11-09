@@ -368,3 +368,107 @@ def test_duplicate_and_contradiction_detection(app, client, auth_headers):
         assert old_refreshed.status == "archived"
 
 
+def test_false_positive_duplicate_and_contradiction_guards():
+    """Verify that unrelated statements sharing common words are not marked as duplicate or contradictory."""
+    from app.ai.memory.comparison import memory_comparison_engine
+    from app.models.ai import AIMemory
+
+    existing = AIMemory(
+        id="mem-1",
+        user_id="user-1",
+        memory_key="Morning Routine",
+        memory_value="Enjoys drinking black coffee in the morning",
+        memory_type="routine_pattern",
+        status="confirmed"
+    )
+
+    # 1. Unrelated statement that shares the word "morning" and "evening"
+    # Candidate: "Prefers evening walks with the dog"
+    # Neither key nor full meaning is conflicting.
+    res_unrelated = memory_comparison_engine.check_duplicate_or_contradiction(
+        candidate_key="Dog Walking",
+        candidate_value="Prefers evening walks with the dog",
+        candidate_type="routine_pattern",
+        existing_memories=[existing]
+    )
+    assert res_unrelated["is_duplicate"] is False
+    assert res_unrelated["is_contradiction"] is False
+
+    # 2. Similar keywords but completely different meaning
+    # Existing: "Prefers light roast beans for coffee"
+    # Candidate: "Works in a dark room with monitor backlight"
+    coffee_mem = AIMemory(
+        id="mem-2",
+        user_id="user-1",
+        memory_key="Coffee Roasting",
+        memory_value="Prefers light roast beans for coffee",
+        memory_type="preference",
+        status="confirmed"
+    )
+    res_dark = memory_comparison_engine.check_duplicate_or_contradiction(
+        candidate_key="Work Environment",
+        candidate_value="Works in a dark room with monitor backlight",
+        candidate_type="preference",
+        existing_memories=[coffee_mem]
+    )
+    assert res_dark["is_duplicate"] is False
+    assert res_dark["is_contradiction"] is False
+
+
+def test_cross_user_supersede_idor_rejected(client, auth_headers):
+    """Verify a user cannot pass another user's memory ID in supersede_existing_id."""
+    # Register user B
+    client.post("/api/v1/auth/register", json={
+        "email": "victim_mem@example.com",
+        "password": "Password123!",
+        "full_name": "Victim User"
+    })
+    login_b = client.post("/api/v1/auth/login", json={
+        "email": "victim_mem@example.com",
+        "password": "Password123!"
+    })
+    token_b = login_b.get_json()["data"]["tokens"]["access_token"]
+    headers_b = {"Authorization": f"Bearer {token_b}"}
+
+    # User B creates a confirmed memory
+    resp_b = client.post("/api/v1/ai/memories", json={
+        "memory_key": "Victim Bank",
+        "memory_value": "Important Account Info",
+        "memory_type": "fact"
+    }, headers=headers_b)
+    victim_mem_id = resp_b.get_json()["data"]["memory"]["id"]
+
+    # User A creates a memory manually then attempts to supersede User B's memory
+    create_a = client.post("/api/v1/ai/memories", json={
+        "memory_key": "Attacker Candidate",
+        "memory_value": "Attempting unauthorized supersede",
+        "memory_type": "fact"
+    }, headers=auth_headers)
+    assert create_a.status_code == 201
+    mem_a_id = create_a.get_json()["data"]["memory"]["id"]
+
+    # In pending state, attempt to approve with supersede_existing_id=victim_mem_id
+    from app.services.ai_memory_service import AIMemoryService
+    service = AIMemoryService()
+    # Temporarily set to pending to test approval gate
+    with client.application.app_context():
+        mem_rec = service.memory_repo.get_by_id(mem_a_id)
+        mem_rec.status = "pending"
+        from app.extensions import db
+        db.session.commit()
+
+    # User A approves with supersede targeting User B
+    appr_resp = client.post(f"/api/v1/ai/memories/{mem_a_id}/approve", json={
+        "supersede_existing_id": victim_mem_id
+    }, headers=auth_headers)
+
+    # Must be forbidden or rejected
+    assert appr_resp.status_code in [403, 404]
+
+    # Verify User B's memory was NOT archived
+    verify_b = client.get(f"/api/v1/ai/memories/{victim_mem_id}", headers=headers_b)
+    assert verify_b.status_code == 200
+    assert verify_b.get_json()["data"]["memory"]["status"] == "confirmed"
+
+
+

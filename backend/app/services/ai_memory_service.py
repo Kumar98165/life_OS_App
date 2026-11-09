@@ -134,20 +134,18 @@ class AIMemoryService:
         edited_type: Optional[str] = None,
         supersede_existing_id: Optional[str] = None
     ) -> AIMemory:
-        """Promote a pending suggestion to confirmed memory, optionally archiving/superseding a contradicted existing memory."""
+        """Promote a pending suggestion to confirmed memory, optionally archiving a superseded existing memory belonging to the same user."""
         memory = self.get_memory(memory_id, current_user_id)
         if memory.status != "pending":
             raise BadRequestException(f"Cannot approve memory with status '{memory.status}'")
 
-        # If user confirmed superseding an existing contradicted memory
-        target_supersede = supersede_existing_id
-        if not target_supersede and memory.embedding and isinstance(memory.embedding, dict):
-            contra_info = memory.embedding.get("contradiction", {})
-            target_supersede = contra_info.get("contradicting_memory_id")
-
-        if target_supersede:
-            old_mem = self.memory_repo.get_by_id(target_supersede)
-            if old_mem and old_mem.user_id == current_user_id and old_mem.status == "confirmed":
+        # Atomic transaction: only archive the old memory if it exists and belongs strictly to the authenticated user
+        if supersede_existing_id:
+            old_mem = self.memory_repo.get_by_id(supersede_existing_id)
+            if not old_mem:
+                raise NotFoundException("Superseded memory not found")
+            check_resource_ownership(old_mem.user_id, current_user_id)
+            if old_mem.status == "confirmed":
                 self.memory_repo.update_memory(old_mem, {"status": "archived"})
 
         updates: Dict[str, Any] = {"status": "confirmed"}

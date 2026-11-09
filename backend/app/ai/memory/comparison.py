@@ -76,28 +76,27 @@ class MemoryComparisonEngine:
             ex_key = normalize_memory_text(existing.memory_key)
             ex_val = normalize_memory_text(existing.memory_value)
 
-            # 1. Exact Duplicate (key or value match)
-            if norm_key == ex_key and (norm_val == ex_val or existing.memory_type == candidate_type):
-                if norm_val == ex_val:
-                    return {
-                        "is_duplicate": True,
-                        "duplicate_memory_id": existing.id,
-                        "is_contradiction": False,
-                        "contradicting_memory_id": None,
-                        "contradiction_reason": None,
-                        "similarity_score": 1.0,
-                    }
+            # 1. Exact Duplicate (key and value match)
+            if norm_key == ex_key and norm_val == ex_val:
+                return {
+                    "is_duplicate": True,
+                    "duplicate_memory_id": existing.id,
+                    "is_contradiction": False,
+                    "contradicting_memory_id": None,
+                    "contradiction_reason": None,
+                    "similarity_score": 1.0,
+                }
 
             # 2. Key Overlap & Polarity / Content Difference (Contradiction Check)
             ex_keywords = extract_keywords(f"{existing.memory_key} {existing.memory_value}")
             common_keywords = cand_keywords.intersection(ex_keywords)
 
-            # If they share core domain concepts (e.g. "response", "style", "workout", "sleep")
-            if len(common_keywords) >= 1:
+            # Contradictions are checked only when there is substantial domain overlap (at least 2 common keywords or identical key)
+            if norm_key == ex_key or len(common_keywords) >= 2:
                 # Check for explicit polarity antonyms
                 for w1, w2 in self.POLARITY_PAIRS:
-                    if (w1 in norm_val and w2 in ex_val) or (w2 in norm_val and w1 in ex_val) or \
-                       (w1 in norm_key and w2 in ex_key) or (w2 in norm_key and w1 in ex_key):
+                    if ((w1 in norm_val and w2 in ex_val) or (w2 in norm_val and w1 in ex_val) or
+                        (w1 in norm_key and w2 in ex_key) or (w2 in norm_key and w1 in ex_key)):
                         return {
                             "is_duplicate": False,
                             "duplicate_memory_id": None,
@@ -107,7 +106,7 @@ class MemoryComparisonEngine:
                             "similarity_score": 0.85,
                         }
 
-                # Check if same key concept but distinctly different value (e.g. "prefers dark theme" vs "prefers light theme")
+                # Same key but different value
                 if norm_key == ex_key and norm_val != ex_val:
                     return {
                         "is_duplicate": False,
