@@ -40,9 +40,18 @@ def get_improvement_dashboard():
 @ai_improvement_bp.route("/datasets/<string:version_name>/readiness", methods=["GET"])
 @jwt_required()
 def check_dataset_readiness(version_name):
-    """Evaluate dataset readiness for training (sample volume, PII, consent, duplicates)."""
+    """Evaluate dataset readiness for training (sample volume, PII, consent, duplicates, advisory notes)."""
+    min_samples = request.args.get("min_samples", type=int)
+    min_quality = request.args.get("min_quality", type=float)
+    max_duplicates = request.args.get("max_duplicates", type=float)
+
     service = _get_service()
-    readiness = service.evaluate_dataset_readiness(dataset_version_name=version_name)
+    readiness = service.evaluate_dataset_readiness(
+        dataset_version_name=version_name,
+        min_sample_threshold=min_samples,
+        min_quality_score=min_quality,
+        max_duplicate_rate=max_duplicates,
+    )
     return api_response(
         data=readiness,
         message="Dataset readiness evaluation completed.",
@@ -124,6 +133,38 @@ def execute_training_job(job_id):
     return api_response(
         data=res,
         message="Training job preparation and dry-run completed successfully.",
+        status_code=200
+    )
+
+
+@ai_improvement_bp.route("/jobs/<string:job_id>/record-completion", methods=["POST"])
+@admin_required()
+def record_gpu_training_completion(job_id):
+    """Record verified completion of real external GPU training with cryptographic provenance (Admin only)."""
+    user_id = get_jwt_identity()
+    user = _get_user_object(user_id)
+    data = request.get_json(silent=True) or {}
+
+    artifact_checksum = data.get("artifact_checksum")
+    artifact_directory = data.get("artifact_directory")
+    metrics = data.get("metrics") or {}
+
+    if not artifact_checksum or not artifact_directory:
+        raise BadRequestException("artifact_checksum and artifact_directory are required to record real training completion.")
+
+    service = _get_service()
+    res = service.record_gpu_training_completion(
+        job_id=job_id,
+        artifact_checksum=artifact_checksum,
+        artifact_directory=artifact_directory,
+        metrics=metrics,
+        user=user,
+        log_output=data.get("log_output"),
+    )
+
+    return api_response(
+        data=res,
+        message="Real GPU training completion recorded with verified cryptographic provenance.",
         status_code=200
     )
 

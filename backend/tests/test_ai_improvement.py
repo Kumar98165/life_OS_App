@@ -132,7 +132,9 @@ class TestDatasetReadiness:
             service = ContinuousImprovementService()
             report = service.evaluate_dataset_readiness(dataset_version_name="v0.1.0-too-few")
             assert report["is_ready_for_training"] is False
-            assert any("below minimum configured threshold" in r for r in report["blocking_reasons"])
+            assert any("below minimum technical threshold" in r for r in report["blocking_reasons"])
+            assert report["meets_recommended_volume"] is False
+            assert len(report["advisory_notes"]) > 0
 
     def test_dataset_readiness_blocks_revoked_consent_and_unapproved(self, app, admin_user):
         with app.app_context():
@@ -189,12 +191,44 @@ class TestTrainingJobLifecycle:
 
             # 2. Execute dry-run validation
             res = service.execute_dry_run_or_prepare_job(job_id=job.id, user=user)
-            assert res["status"] == "completed"
+            assert res["status"] == "dry_run_validated"
+            assert res["is_real_training"] is False
+
+            db.session.refresh(job)
+            assert job.status == "dry_run_validated"
+            assert job.artifact_checksum is not None
+            assert job.completed_at is not None
+
+            # 3. Dry-run cannot be evaluated or registered as a candidate
+            with pytest.raises(BadRequestException, match="cannot produce production-eligible trained candidates"):
+                service.post_training_evaluate_and_register(job_id=job.id, user=user)
+
+    def test_record_real_gpu_training_completion_and_integrity(self, app, admin_user, ready_dataset_version):
+        with app.app_context():
+            user = db.session.get(User, admin_user)
+            service = ContinuousImprovementService()
+
+            job = service.create_training_job(
+                dataset_version_name=ready_dataset_version,
+                job_name="job_real_gpu_run",
+                candidate_model_tag="qwen2.5:3b-real-gpu-cand",
+                user=user,
+            )
+
+            # Record real GPU completion with cryptographic checksum
+            real_res = service.record_gpu_training_completion(
+                job_id=job.id,
+                artifact_checksum="a" * 64,
+                artifact_directory="/artifacts/runs/job_real_gpu_run",
+                metrics={"train_loss": 0.42, "epochs": 3},
+                user=user,
+            )
+            assert real_res["status"] == "completed"
+            assert real_res["is_real_training"] is True
 
             db.session.refresh(job)
             assert job.status == "completed"
-            assert job.artifact_checksum is not None
-            assert job.completed_at is not None
+            assert job.artifact_checksum == "a" * 64
 
     def test_duplicate_concurrent_job_prevention(self, app, admin_user, ready_dataset_version):
         with app.app_context():
@@ -248,7 +282,14 @@ class TestPostTrainingEvaluationAndRegistry:
                 candidate_model_tag="qwen2.5:3b-post-cand",
                 user=user,
             )
-            service.execute_dry_run_or_prepare_job(job_id=job.id, user=user)
+            # Record completed real training
+            service.record_gpu_training_completion(
+                job_id=job.id,
+                artifact_checksum="c" * 64,
+                artifact_directory="/artifacts/runs/job_post_train_eval",
+                metrics={"train_loss": 0.35, "epochs": 3},
+                user=user,
+            )
 
             # Post-training evaluate and register with mock responses
             all_items = BenchmarkDataset.get_all_items()
@@ -323,9 +364,20 @@ class TestImprovementAPI:
         # 5. Execute dry-run validation
         exec_resp = client.post(f"/api/v1/ai/improvement/jobs/{job_id}/execute", headers=admin_headers)
         assert exec_resp.status_code == 200
-        assert exec_resp.get_json()["data"]["status"] == "completed"
+        assert exec_resp.get_json()["data"]["status"] == "dry_run_validated"
+        assert exec_resp.get_json()["data"]["is_real_training"] is False
 
         # 6. List jobs
         list_jobs = client.get("/api/v1/ai/improvement/jobs", headers=user_headers)
         assert list_jobs.status_code == 200
         assert len(list_jobs.get_json()["data"]["items"]) >= 1
+
+        # 7. Record real GPU training completion via API
+        rec_resp = client.post(f"/api/v1/ai/improvement/jobs/{job_id}/record-completion", headers=admin_headers, json={
+            "artifact_checksum": "e" * 64,
+            "artifact_directory": "/artifacts/trained/api_test_job_1",
+            "metrics": {"loss": 0.29}
+        })
+        assert rec_resp.status_code == 200
+        assert rec_resp.get_json()["data"]["status"] == "completed"
+        assert rec_resp.get_json()["data"]["is_real_training"] is True

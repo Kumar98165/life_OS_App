@@ -25,9 +25,13 @@ flowchart TD
 
 Training jobs are prohibited from being scheduled or prepared unless the dataset version passes strict deterministic quality gates:
 
-1. **Minimum Sample Volume**:
-   - **Configured Threshold**: $\ge 5$ samples (`MIN_DATASET_SAMPLE_THRESHOLD = 5`).
-   - **Engineering Rationale**: LifeOS targets task planning, habit coaching, and goal management tasks on resource-constrained local infrastructure. Requiring 5 vetted, high-quality, domain-specific samples ensures balanced task coverage without accumulating low-signal noise, while maintaining reproducibility.
+1. **Separation of Technical Readiness vs Recommended Dataset Volume**:
+   - **Minimum Technical Threshold**: $\ge 5$ samples (`MIN_DATASET_SAMPLE_THRESHOLD = 5`).
+     > [!WARNING]
+     > 5 samples is strictly a **technical verification floor** to enable pipeline dry-runs and verify export schemas. It is **not** sufficient for reliable production model fine-tuning or generalization. Passing readiness checks does **not** guarantee training quality or prevent overfitting.
+   - **Recommended Training Volume**: $\ge 100+$ samples (`RECOMMENDED_DATASET_SAMPLE_SIZE = 100`). The readiness report explicitly flags `meets_recommended_volume` and emits advisory notes when sample counts fall below recommended production thresholds.
+   - **Configurable Thresholds**: `evaluate_dataset_readiness` accepts query parameters `min_samples`, `min_quality`, and `max_duplicates`, allowing operators to customize readiness requirements.
+   - **Domain Coverage Breakdown**: Emits a dictionary breakdown of sample counts across all domains (daily planning, task management, habit coaching, etc.).
 2. **Consent & Privacy Compliance**:
    - Every sample must have `consent_revoked = False`. If a user revokes learning consent, the dataset version readiness drops to `False` with explicit blocking reasons.
    - Every sample must be PII-sanitized (`is_sanitized = True`).
@@ -38,17 +42,20 @@ Training jobs are prohibited from being scheduled or prepared unless the dataset
 
 ---
 
-## 3. Training Job State Machine & Concurrency Control
+## 3. Dry-Run vs Actual Real Training Separation & Job State Machine
 
-`AITrainingJob` implements an explicit 7-state finite state machine:
+To prevent accidental claims of model completion or premature candidate promotion, the system strictly separates dry-runs from real training:
 
-- `pending`: Job record created, awaiting resource allocation or schedule.
-- `validating`: System is running data integrity verification and dry-run preparation.
-- `ready`: Ready for execution or exported for remote GPU execution.
-- `running`: Active training execution in progress.
-- `completed`: Successfully trained or dry-run generated with verified artifact checksum.
-- `failed`: Job encountered errors during preparation or execution.
-- `cancelled`: Operator manually aborted the job before completion.
+- **Dry-Run Mode (`dry_run_validated`)**:
+  - Validates dataset integrity, instruction formatting, and hardware compatibility.
+  - Emits training profile JSON and verifies export hashes.
+  - Transitions job status to `dry_run_validated`.
+  - **Cannot be registered as a real candidate model or evaluated against benchmarks**. Any attempt to evaluate or promote a dry-run job returns `HTTP 400 Bad Request`.
+- **Real Training Mode (`completed`)**:
+  - Recorded via `POST /api/v1/ai/improvement/jobs/<job_id>/record-completion` with verified cryptographic provenance (adapter checksum $\ge 32$ chars, artifact directory, training metrics, and logs).
+  - Only real `completed` jobs can enter benchmark evaluation.
+- **Job States**:
+  - `pending` $\to$ `validating` $\to$ `ready` $\to$ `running` $\to$ `completed` / `dry_run_validated` / `failed` / `cancelled`.
 
 ### Concurrency Protection
 To prevent duplicate resource consumption or training race conditions, the system enforces a strict invariant: **only one active job (`pending`, `validating`, `ready`, or `running`) can exist per dataset version at any time**. Subsequent attempts to create or run jobs for that version return `HTTP 409 Conflict`.
@@ -112,3 +119,4 @@ The mobile dashboard screen is accessible via navigation route `AIImprovementDas
   - 158/158 tests passed in Jest/tsx runner.
 - **Mobile TypeScript Typecheck**:
   - `npm --prefix mobile run typecheck` passed with 0 errors.
+

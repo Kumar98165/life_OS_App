@@ -22,7 +22,7 @@ export interface ImprovementDashboardData {
     id: string;
     job_name: string;
     candidate_model_tag: string;
-    status: 'pending' | 'validating' | 'ready' | 'running' | 'completed' | 'failed' | 'cancelled';
+    status: 'pending' | 'validating' | 'ready' | 'running' | 'completed' | 'dry_run_validated' | 'failed' | 'cancelled';
     created_at: string;
   }>;
   model_versions_count: number;
@@ -41,16 +41,21 @@ export interface DatasetReadinessReport {
   dataset_version_id: string;
   version_name: string;
   total_samples: number;
-  minimum_required_samples: number;
+  minimum_technical_samples: number;
+  recommended_training_samples: number;
+  meets_recommended_volume: boolean;
   valid_samples_count: number;
   sanitized_samples_count: number;
   consented_samples_count: number;
   approved_samples_count: number;
+  category_coverage?: Record<string, number>;
+  categories?: string[];
   duplicate_count: number;
   duplicate_rate: number;
   average_quality_score: number;
   is_ready_for_training: boolean;
   blocking_reasons: string[];
+  advisory_notes?: string[];
   evaluated_at: string;
 }
 

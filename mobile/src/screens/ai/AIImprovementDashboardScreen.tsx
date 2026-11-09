@@ -91,8 +91,17 @@ export const AIImprovementDashboardScreen: React.FC<{ navigation: any }> = ({ na
               <View key={job.id} style={styles.jobItem}>
                 <View style={styles.jobHeader}>
                   <Text style={styles.jobName}>{job.job_name}</Text>
-                  <View style={[styles.statusPill, job.status === 'completed' ? styles.statusSuccess : styles.statusPending]}>
-                    <Text style={styles.statusPillText}>{job.status.toUpperCase()}</Text>
+                  <View style={[
+                    styles.statusPill,
+                    job.status === 'completed'
+                      ? styles.statusSuccess
+                      : job.status === 'dry_run_validated'
+                      ? styles.statusDryRun
+                      : styles.statusPending
+                  ]}>
+                    <Text style={styles.statusPillText}>
+                      {job.status === 'dry_run_validated' ? 'DRY-RUN VALIDATED' : job.status.toUpperCase()}
+                    </Text>
                   </View>
                 </View>
                 <Text style={styles.jobMeta}>Candidate: {job.candidate_model_tag}</Text>
@@ -307,6 +316,9 @@ const styles = StyleSheet.create({
   },
   statusSuccess: {
     backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  statusDryRun: {
+    backgroundColor: 'rgba(234, 179, 8, 0.2)',
   },
   statusPending: {
     backgroundColor: 'rgba(99, 102, 241, 0.2)',

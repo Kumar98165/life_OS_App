@@ -38,10 +38,14 @@ from app.core.exceptions import (
 )
 
 # Minimum dataset threshold configuration
-# Configured minimum of 5 approved & validated samples for candidate training job preparation.
-# Rationale: Ensures sufficient diversity across basic productivity tasks while allowing
-# controlled iterative staging without arbitrary bloat.
+# TECHNICAL GATE: Absolute minimum sample count to allow dry-run pipeline preparation.
+# IMPORTANT: 5 samples is strictly a technical verification floor. It is NOT sufficient
+# for reliable fine-tuning or generalization in production.
 MIN_DATASET_SAMPLE_THRESHOLD = 5
+
+# RECOMMENDED TRAINING SIZES for production-ready fine-tuning:
+# Task/Domain specific fine-tuning typically requires hundreds or thousands of high-quality samples.
+RECOMMENDED_DATASET_SAMPLE_SIZE = 100
 MIN_QUALITY_SCORE_AVERAGE = 0.80
 
 
@@ -69,12 +73,20 @@ class ContinuousImprovementService:
     def evaluate_dataset_readiness(
         self,
         dataset_version_id: Optional[str] = None,
-        dataset_version_name: Optional[str] = None
+        dataset_version_name: Optional[str] = None,
+        min_sample_threshold: Optional[int] = None,
+        min_quality_score: Optional[float] = None,
+        max_duplicate_rate: Optional[float] = None,
     ) -> Dict[str, Any]:
         """Evaluate dataset readiness for training based on quality, volume, consent, and duplicate checks.
 
         Returns comprehensive readiness report without training side-effects.
+        Separates minimum technical readiness from recommended dataset volume.
         """
+        threshold_min = min_sample_threshold if min_sample_threshold is not None else MIN_DATASET_SAMPLE_THRESHOLD
+        threshold_quality = min_quality_score if min_quality_score is not None else MIN_QUALITY_SCORE_AVERAGE
+        threshold_duplicate = max_duplicate_rate if max_duplicate_rate is not None else 0.15
+
         if dataset_version_id:
             version = self.dataset_repo.get_version_by_id(dataset_version_id)
         elif dataset_version_name:
@@ -110,17 +122,21 @@ class ContinuousImprovementService:
         quality_scores = [s.quality_score for s in samples if s.quality_score is not None]
         avg_quality = round(sum(quality_scores) / max(len(quality_scores), 1), 2) if quality_scores else 0.0
 
-        # Category coverage
-        categories = list({s.category for s in samples if s.category})
+        # Category coverage breakdown
+        category_breakdown: Dict[str, int] = {}
+        for s in samples:
+            cat = s.category or "uncategorized"
+            category_breakdown[cat] = category_breakdown.get(cat, 0) + 1
+        categories = list(category_breakdown.keys())
 
         # Evaluate gating criteria
         reasons = []
         is_ready = True
 
-        if total_samples < MIN_DATASET_SAMPLE_THRESHOLD:
+        if total_samples < threshold_min:
             is_ready = False
             reasons.append(
-                f"Sample count ({total_samples}) is below minimum configured threshold ({MIN_DATASET_SAMPLE_THRESHOLD})."
+                f"Sample count ({total_samples}) is below minimum technical threshold ({threshold_min})."
             )
 
         if len(valid_samples) != total_samples:
@@ -139,30 +155,44 @@ class ContinuousImprovementService:
             is_ready = False
             reasons.append(f"{total_samples - len(approved_samples)} samples lack explicit approval.")
 
-        if avg_quality < MIN_QUALITY_SCORE_AVERAGE:
+        if avg_quality < threshold_quality:
             is_ready = False
-            reasons.append(f"Average quality score ({avg_quality}) is below threshold ({MIN_QUALITY_SCORE_AVERAGE}).")
+            reasons.append(f"Average quality score ({avg_quality}) is below threshold ({threshold_quality}).")
 
-        if duplicate_rate > 0.15:
+        if duplicate_rate > threshold_duplicate:
             is_ready = False
-            reasons.append(f"Prompt duplicate rate ({duplicate_rate * 100}%) exceeds 15% tolerance.")
+            reasons.append(f"Prompt duplicate rate ({duplicate_rate * 100}%) exceeds {threshold_duplicate * 100}% tolerance.")
+
+        # Recommended volume assessment (advisory only, does not block technical readiness)
+        is_recommended_volume = total_samples >= RECOMMENDED_DATASET_SAMPLE_SIZE
+        advisory_notes = []
+        if not is_recommended_volume:
+            advisory_notes.append(
+                f"Dataset contains {total_samples} samples. While meeting technical minimum ({threshold_min}), "
+                f"it is well below the recommended {RECOMMENDED_DATASET_SAMPLE_SIZE}+ samples for reliable generalization. "
+                "Passing readiness checks does not guarantee training quality or avoid overfitting."
+            )
 
         return {
             "dataset_version_id": version.id,
             "version_name": version.version_name,
             "manifest_hash": version.manifest_hash,
             "total_samples": total_samples,
-            "minimum_required_samples": MIN_DATASET_SAMPLE_THRESHOLD,
+            "minimum_technical_samples": threshold_min,
+            "recommended_training_samples": RECOMMENDED_DATASET_SAMPLE_SIZE,
+            "meets_recommended_volume": is_recommended_volume,
             "valid_samples_count": len(valid_samples),
             "sanitized_samples_count": len(sanitized_samples),
             "consented_samples_count": len(consented_samples),
             "approved_samples_count": len(approved_samples),
+            "category_coverage": category_breakdown,
             "categories": categories,
             "duplicate_count": duplicate_count,
             "duplicate_rate": duplicate_rate,
             "average_quality_score": avg_quality,
             "is_ready_for_training": is_ready,
             "blocking_reasons": reasons,
+            "advisory_notes": advisory_notes,
             "evaluated_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -248,7 +278,14 @@ class ContinuousImprovementService:
         job_id: str,
         user: Optional[Any] = None
     ) -> Dict[str, Any]:
-        """Validate pipeline execution via STEP 8 dry-run engine and package run artifacts."""
+        """Validate pipeline execution via STEP 8 dry-run engine and package run artifacts.
+
+        IMPORTANT SAFETY ENFORCEMENT:
+        - Dry-run mode ONLY validates datasets, format compatibility, and emits export configs.
+        - Dry-run NEVER executes actual model fine-tuning.
+        - The resulting status is explicitly marked as 'dry_run_validated', NOT 'completed'.
+        - Dry-run jobs CANNOT be registered as real trained models or promoted into production.
+        """
         if user:
             self._verify_admin(user)
 
@@ -276,8 +313,8 @@ class ContinuousImprovementService:
             runner = TrainingPipelineRunner(dataset_service=AIDatasetService(self.dataset_repo))
             dry_run_result = runner.run_pipeline(profile=profile, dry_run=True)
 
-            # Update job state
-            job.status = "completed"
+            # Update job state explicitly as dry_run_validated
+            job.status = "dry_run_validated"
             job.completed_at = datetime.now(timezone.utc)
             job.artifact_directory = dry_run_result.get("artifacts_dir", f"./training_artifacts/{job.job_name}")
             # Use deterministic checksum of the dataset export as artifact checksum in dry-run
@@ -289,6 +326,7 @@ class ContinuousImprovementService:
                 "job_id": job.id,
                 "job_name": job.job_name,
                 "status": job.status,
+                "is_real_training": False,
                 "dry_run_summary": dry_run_result,
             }
 
@@ -298,6 +336,52 @@ class ContinuousImprovementService:
             job.completed_at = datetime.now(timezone.utc)
             db.session.commit()
             raise
+
+    def record_gpu_training_completion(
+        self,
+        job_id: str,
+        artifact_checksum: str,
+        artifact_directory: str,
+        metrics: Dict[str, Any],
+        user: Any,
+        log_output: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Record the successful completion of an actual external GPU training run.
+
+        Enforces provenance requirements:
+        - Non-empty artifact checksum (e.g. SHA-256 of adapter weights).
+        - Existing artifact directory with verifiable configuration.
+        - Only jobs that were prepared and in 'ready', 'validating', or 'running' state.
+        """
+        self._verify_admin(user)
+        job = db.session.get(AITrainingJob, job_id)
+        if not job:
+            raise NotFoundException(f"Training job '{job_id}' not found.")
+
+        if not artifact_checksum or len(artifact_checksum) < 32:
+            raise BadRequestException("A valid cryptographic artifact_checksum is required for real training.")
+
+        if not artifact_directory:
+            raise BadRequestException("artifact_directory cannot be empty for real training completion.")
+
+        job.status = "completed"
+        job.completed_at = datetime.now(timezone.utc)
+        job.artifact_checksum = artifact_checksum
+        job.artifact_directory = artifact_directory
+        job.log_output = log_output or json.dumps({
+            "mode": "gpu_training",
+            "metrics": metrics,
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+        }, indent=2)
+
+        db.session.commit()
+        return {
+            "job_id": job.id,
+            "job_name": job.job_name,
+            "status": job.status,
+            "artifact_checksum": job.artifact_checksum,
+            "is_real_training": True,
+        }
 
     def cancel_job(self, job_id: str, user: Any, reason: Optional[str] = None) -> AITrainingJob:
         """Cancel a pending, validating, or ready job."""
@@ -323,16 +407,34 @@ class ContinuousImprovementService:
     ) -> Dict[str, Any]:
         """Perform Step 9 evaluation on candidate model and register candidate in Step 10 registry.
 
-        If benchmark meets threshold (>= 0.65), registers as candidate/evaluated.
-        Does NOT automatically replace the active production model.
+        SAFETY INVARIANTS:
+        - Only REAL completed GPU training jobs ('completed') can enter evaluation.
+        - Dry-run validated jobs ('dry_run_validated') CANNOT be registered as real candidates.
+        - Failed, cancelled, or validating jobs CANNOT be registered.
+        - The candidate model must be present and available in Ollama (or valid mock responses provided).
+        - Evaluation comparison uses the exact same benchmark suite and metrics for candidate and base.
+        - If candidate evaluation fails or model is missing in Ollama, registration is refused.
+        - The existing active model remains unchanged; candidate is created with is_active=False.
         """
         self._verify_admin(user)
         job = db.session.get(AITrainingJob, job_id)
         if not job:
             raise NotFoundException(f"Training job '{job_id}' not found.")
 
+        if job.status == "dry_run_validated":
+            raise BadRequestException(
+                f"Job '{job.job_name}' is in 'dry_run_validated' status. "
+                "Dry-run jobs only validate configuration and cannot produce production-eligible trained candidates."
+            )
+
         if job.status != "completed":
-            raise BadRequestException(f"Cannot evaluate job with status '{job.status}'. Must be 'completed'.")
+            raise BadRequestException(
+                f"Cannot evaluate job with status '{job.status}'. Only real completed training jobs ('completed') can be evaluated."
+            )
+
+        # Provenance check: Real completed jobs must have verifiable artifacts
+        if not job.artifact_checksum or job.artifact_checksum == "0" * 64:
+            raise BadRequestException("Job lacks verifiable cryptographic artifact checksum from training execution.")
 
         # 1. Run STEP 9 benchmark comparison against baseline
         comparison_res = self.eval_service.compare_models(
@@ -342,11 +444,23 @@ class ContinuousImprovementService:
             candidate_mock_responses=mock_eval_responses,
         )
 
-        overall_score = 0.0
-        if comparison_res.get("comparison_status") == "completed":
-            overall_score = comparison_res["candidate_model"]["overall_score"]
-        elif "base_model_report" in comparison_res:
-            overall_score = comparison_res["base_model_report"]["aggregate_metrics"]["overall_score"]
+        # Validate that comparison actually evaluated the candidate
+        comp_status = comparison_res.get("comparison_status")
+        if comp_status == "candidate_unavailable":
+            raise BadRequestException(
+                f"Candidate model '{job.candidate_model_tag}' is unavailable in Ollama runtime. "
+                "Cannot register an unavailable or undeployed candidate."
+            )
+        elif comp_status == "candidate_failed":
+            raise BadRequestException(
+                f"Candidate model '{job.candidate_model_tag}' failed benchmark evaluation: {comparison_res.get('error')}"
+            )
+        elif comp_status != "completed":
+            raise BadRequestException(
+                f"Benchmark comparison did not complete successfully: {comparison_res.get('error', 'Unknown error')}"
+            )
+
+        overall_score = comparison_res["candidate_model"]["overall_score"]
 
         # 2. Register candidate model in STEP 10 registry
         existing_model = self.registry_service.repo.get_by_model_tag(job.candidate_model_tag)
@@ -357,7 +471,7 @@ class ContinuousImprovementService:
                 base_model=job.base_model_name,
                 training_run_id=job.job_name,
                 dataset_version=job.dataset_version.version_name,
-                artifact_checksum=job.artifact_checksum or ("0" * 64),
+                artifact_checksum=job.artifact_checksum,
                 notes=f"Candidate generated from training job {job.job_name}",
                 user=user,
             )
