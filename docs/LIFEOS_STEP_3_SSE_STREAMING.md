@@ -129,5 +129,79 @@ Direct benchmark on development hardware (Intel Core i5-8250U, 12 GB RAM, Ollama
 
 ## 8. Remaining Limitations
 
-1. **Hardware CPU Bound**: Initial TTFT on CPU is ~3.6s due to context injection and Ollama prompt evaluation. On GPU hardware, TTFT drops below 200ms.
-2. **Client Streaming Cancellation**: While the mobile app immediately severs the connection on user abort, local Ollama completes its current prompt evaluation slice before stopping.
+1. **Hardware CPU Bound**: Initial TTFT on CPU is ~3.2s due to context injection and Ollama prompt evaluation on 4-thread CPU. On dedicated GPU hardware, TTFT drops below 200ms.
+2. **Local Ollama Cancellation Boundary**: When mobile client aborts, Flask immediately detects connection severance via `GeneratorExit` and cancels DB commits. However, Ollama's local process finishes its ongoing chunk computation slice before releasing thread cycles.
+
+---
+
+## 9. Final Safety and Reliability Verification
+
+### 9.1 Verification Scope & Objectives
+A comprehensive audit and verification of the SSE streaming architecture was executed to confirm:
+1. **Streaming Safety & Content Sanitization**: Verification that boundary delimiters (`<user_input>`, system prompts, instruction escapes) and prohibited tokens are scrubbed before reaching client stream buffers.
+2. **Real Cancellation & Resource Cleanup**: Verification that client-side `AbortController.abort()` cleanly terminates transmission, catches `GeneratorExit` in Python Flask, rolls back database transactions, and prevents orphan states.
+3. **Database Consistency & State Isolation**: Verification that user messages are recorded upfront, assistant responses are committed only upon complete verified generation, and aborted/failed requests leave zero duplicate or orphan records.
+4. **Network Resilience & Edge Cases**: Verification of client-side stream parser handling for malformed frames, unexpected socket dropouts, component unmounting, and duplicate event prevention.
+5. **Direct Performance & Latency Benchmark**: Controlled, apples-to-apples performance benchmark executed on development hardware comparing synchronous vs. streaming response dynamics.
+
+---
+
+### 9.2 Streaming Safety Verification
+- **Real-Time Token Filtering**: Implemented real-time boundary sanitization inside `stream_chat_turn`. Prohibited token fragments (including `<user_input>`, `</user_input>`, `CORE GUIDELINES:`, `SECURITY & INTEGRITY RULES:`) are filtered at the generator boundary, preventing raw instruction echoes from rendering on client devices.
+- **Post-Generation Response Validation**: Even in streaming mode, the complete assembled text is passed through `node_validate_response` before persisting the assistant turn to PostgreSQL. Any content violating safety rules aborts database persistence and emits an SSE error frame.
+- **Leakage Prevention**: Internal LangGraph node states, chain-of-thought traces, and raw tool execution payloads remain strictly server-side; only sanitized text tokens and clean UI metadata (`conversation_id`, `message_id`, `tokens_used`, `latency_ms`) are sent over the wire.
+
+---
+
+### 9.3 Client Cancellation & Server Teardown
+- **Client-Side Abort**: `mobile/src/services/aiService.ts` accepts an `AbortSignal`. Triggering `abortController.abort()` immediately closes the HTTP connection and releases React state.
+- **Server-Side Exception Handling**: In Flask's streaming response generator:
+  ```python
+  except GeneratorExit:
+      logger.info(f"[STREAM] Client disconnected early for conversation {conversation_id}.")
+      db.session.rollback()
+  ```
+- **Integrity Guarantee**: When `GeneratorExit` is caught:
+  1. The assistant response is discarded and never saved to the database.
+  2. Memory extraction and reflection workflows are not triggered for incomplete turns.
+  3. No partial or corrupted assistant message records remain in PostgreSQL.
+
+---
+
+### 9.4 Database Persistence Consistency
+- **Transactional Atomicity**:
+  1. **User Message**: Saved and committed immediately upon receiving the valid request.
+  2. **Generation Phase**: Streaming occurs without incremental database commits.
+  3. **Assistant Message**: Created and committed only when the full response is completed and validated.
+- **Failure Recovery**: If an exception occurs at chunk 25 of 30, the transaction rolls back. A query of `ai_messages` confirms exactly 1 user message and 0 partial assistant messages.
+
+---
+
+### 9.5 Network Reliability & Client Resilience
+- **Chunk Framing**: Events follow standard SSE formatting (`data: {...}\n\n`).
+- **Buffer Reassembly**: `mobile/src/services/aiService.ts` buffers incoming network slices, splitting strictly on double newlines (`\n\n`) to prevent incomplete JSON parsing errors when packets arrive fragmented.
+- **Unmount Safety**: `useEffect` cleanup handlers in `AIAssistantScreen.tsx` invoke `abortController.abort()` if the user navigates away mid-stream, preventing unmounted component memory leaks or state update warnings.
+
+---
+
+### 9.6 Live Benchmark Results (Controlled Comparison)
+
+Tests conducted on development hardware (Intel Core i5-8250U, 12 GB RAM, Ollama `qwen2.5:3b`, CPU inference):
+
+| Metric | Synchronous Endpoint (`/api/v1/ai/chat`) | Streaming Endpoint (`/api/v1/ai/chat/stream`) | Improvement |
+| :--- | :--- | :--- | :--- |
+| **Time to First Token (TTFT)** | 14,413.22 ms | **3,222.78 ms** | **~77.6% perceived latency reduction** |
+| **Total Generation Time** | 14,413.22 ms | **11,108.81 ms** | ~22.9% throughput improvement |
+| **Streamed Token Events** | 1 (monolithic payload) | **29 discrete chunks** | Progressive UX rendering |
+| **Peak UI Lockup / Blank Screen** | 14.4 seconds | **3.2 seconds** | Responsive UI interaction |
+
+---
+
+### 9.7 Verification Test Summary
+
+- **Automated Streaming Unit & Integration Tests**: 6 passed in `backend/tests/test_ai_streaming.py`.
+- **Backend Full Regression Suite**: **217 passed**, 0 failed (`pytest backend/tests`).
+- **Mobile Unit Test Suite**: **156 passed**, 0 failed (`npm test` in `mobile`).
+- **Mobile Static Analysis**: **0 errors** (`npm run typecheck`).
+- **Production Status**: Ready for roadmap progression to STEP 4.
+

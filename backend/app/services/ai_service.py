@@ -307,18 +307,31 @@ class AIService:
             yield f"event: error\ndata: {json.dumps({'code': 'PREPARATION_ERROR', 'message': str(prep_err)})}\n\n"
             return
 
-        # 7. Stream LLM tokens directly from Ollama
+        # 7. Stream LLM tokens directly from Ollama with real-time safety boundary filtering
         accumulated_chunks = []
         start_t = time.perf_counter()
+
+        # Prohibited token fragments that indicate prompt leakage or raw markup injection
+        BLOCKED_FRAGMENTS = ["<user_input>", "</user_input>", "CORE GUIDELINES:", "SECURITY & INTEGRITY RULES:"]
 
         try:
             for chunk in llm.stream(llm_messages):
                 token_text = chunk.content if hasattr(chunk, "content") else str(chunk)
                 if token_text:
+                    # Check if token attempts to inject or echo blocked boundary strings
+                    is_blocked = any(frag in token_text for frag in BLOCKED_FRAGMENTS)
+                    if is_blocked:
+                        continue
+
                     accumulated_chunks.append(token_text)
                     yield f"event: token\ndata: {json.dumps({'content': token_text})}\n\n"
 
+        except GeneratorExit:
+            # Client disconnected or aborted stream prematurely
+            db.session.rollback()
+            return
         except Exception as stream_err:
+            db.session.rollback()
             yield f"event: error\ndata: {json.dumps({'code': 'STREAM_ERROR', 'message': str(stream_err)})}\n\n"
             return
 
