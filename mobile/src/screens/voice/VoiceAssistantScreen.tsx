@@ -22,17 +22,19 @@ import { VoiceConversationTurn } from '../../types/voice';
 
 interface VoiceAssistantScreenProps {
   navigation: any;
+  route: any;
 }
 
-export function VoiceAssistantScreen({ navigation }: VoiceAssistantScreenProps) {
+export function VoiceAssistantScreen({ navigation, route }: VoiceAssistantScreenProps) {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   const { data: voiceSettings } = useVoiceSettings();
   const assistantTurnMutation = useVoiceAssistantTurn();
 
+  const initialConvId = route?.params?.conversationId;
   const [conversation, setConversation] = useState<VoiceConversationTurn[]>([]);
-  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+  const [conversationId, setConversationId] = useState<string | undefined>(initialConvId);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [textInputFallback, setTextInputFallback] = useState('');
@@ -283,12 +285,24 @@ export function VoiceAssistantScreen({ navigation }: VoiceAssistantScreenProps) 
             Local Whisper + TTS • Private
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('VoiceSettings')}
-          style={styles.settingsButton}
-        >
-          <Ionicons name="settings-outline" size={22} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.headerRightActions}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('VoiceConversationHistory')}
+            style={styles.historyButton}
+            accessibilityRole="button"
+            accessibilityLabel="Voice Conversation History"
+          >
+            <Ionicons name="time-outline" size={22} color={theme.colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('VoiceSettings')}
+            style={styles.settingsButton}
+            accessibilityRole="button"
+            accessibilityLabel="Voice Settings"
+          >
+            <Ionicons name="settings-outline" size={22} color={theme.colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Conversation Scroll */}
@@ -470,6 +484,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   settingsButton: {
+    padding: 6,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  historyButton: {
     padding: 6,
   },
   dialogueList: {

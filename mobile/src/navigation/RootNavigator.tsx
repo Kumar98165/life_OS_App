@@ -35,6 +35,7 @@ import {
   AutomationExecutionHistoryScreen,
   VoiceAssistantScreen,
   VoiceSettingsScreen,
+  VoiceConversationHistoryScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 
@@ -209,6 +210,11 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="VoiceSettings"
               component={VoiceSettingsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="VoiceConversationHistory"
+              component={VoiceConversationHistoryScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>
