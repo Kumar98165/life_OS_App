@@ -28,7 +28,10 @@ class PlannerService:
         block_type: str = "task",
         status: str = "scheduled",
         task_id: Optional[str] = None,
-        color_hex: Optional[str] = None
+        color_hex: Optional[str] = None,
+        recurrence_rule: Optional[str] = None,
+        reminder_minutes_before: Optional[int] = None,
+        timezone: Optional[str] = "UTC"
     ) -> PlannerBlock:
         """Create a new planner block with conflict detection and task ownership verification."""
         # Normalize datetimes to UTC timezone-aware
@@ -68,7 +71,10 @@ class PlannerService:
             block_type=block_type,
             status=status,
             task_id=task_id,
-            color_hex=color_hex
+            color_hex=color_hex,
+            recurrence_rule=recurrence_rule,
+            reminder_minutes_before=reminder_minutes_before,
+            timezone=timezone
         )
 
     def get_block(self, block_id: str, current_user_id: str) -> PlannerBlock:
@@ -205,6 +211,109 @@ class PlannerService:
             day_end=day_end_utc,
             now_utc=now_utc
         )
+
+    def get_free_time_slots(
+        self,
+        user_id: str,
+        target_date_str: str,
+        start_hour: int = 8,
+        end_hour: int = 20,
+        utc_offset_hours: float = 0.0
+    ) -> List[Dict[str, Any]]:
+        """Calculate non-overlapping available free time slots for a given day."""
+        try:
+            target_date = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+        except ValueError:
+            raise BadRequestException("Invalid date format. Expected YYYY-MM-DD")
+
+        # Day window in user local time
+        day_start = datetime(target_date.year, target_date.month, target_date.day, start_hour, 0, 0)
+        day_end = datetime(target_date.year, target_date.month, target_date.day, end_hour, 0, 0)
+
+        # To UTC
+        window_start_utc = (day_start - timedelta(hours=utc_offset_hours)).replace(tzinfo=timezone.utc)
+        window_end_utc = (day_end - timedelta(hours=utc_offset_hours)).replace(tzinfo=timezone.utc)
+
+        blocks, _ = self.planner_repo.list_for_user(
+            user_id=user_id,
+            start_date=window_start_utc,
+            end_date=window_end_utc,
+            status=None,
+            per_page=100
+        )
+
+        active_blocks = []
+        for b in blocks:
+            if b.status == "cancelled":
+                continue
+            b_st = self._ensure_utc(b.start_time)
+            b_et = self._ensure_utc(b.end_time)
+            if b_st < window_end_utc and b_et > window_start_utc:
+                active_blocks.append((b_st, b_et))
+
+        active_blocks.sort(key=lambda x: x[0])
+
+        free_slots = []
+        cursor = window_start_utc
+
+        for b_start, b_end in active_blocks:
+            b_s = max(b_start, window_start_utc)
+            b_e = min(b_end, window_end_utc)
+
+            if b_s > cursor:
+                duration_mins = int((b_s - cursor).total_seconds() / 60)
+                if duration_mins >= 15:
+                    free_slots.append({
+                        "start_time": cursor.isoformat(),
+                        "end_time": b_s.isoformat(),
+                        "duration_minutes": duration_mins
+                    })
+            if b_e > cursor:
+                cursor = b_e
+
+        if cursor < window_end_utc:
+            duration_mins = int((window_end_utc - cursor).total_seconds() / 60)
+            if duration_mins >= 15:
+                free_slots.append({
+                    "start_time": cursor.isoformat(),
+                    "end_time": window_end_utc.isoformat(),
+                    "duration_minutes": duration_mins
+                })
+
+        return free_slots
+
+    def export_ical(self, user_id: str) -> str:
+        """Export user calendar events to standard iCalendar (.ics) format."""
+        blocks, _ = self.planner_repo.list_for_user(user_id=user_id, per_page=500)
+        lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//LifeOS//Calendar Export 1.0//EN",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH"
+        ]
+        for b in blocks:
+            if b.status == "cancelled":
+                continue
+            s_str = b.start_time.strftime("%Y%m%dT%H%M%SZ")
+            e_str = b.end_time.strftime("%Y%m%dT%H%M%SZ")
+            c_str = b.created_at.strftime("%Y%m%dT%H%M%SZ") if b.created_at else s_str
+            lines.append("BEGIN:VEVENT")
+            lines.append(f"UID:{b.id}@lifeos.app")
+            lines.append(f"DTSTAMP:{c_str}")
+            lines.append(f"DTSTART:{s_str}")
+            lines.append(f"DTEND:{e_str}")
+            lines.append(f"SUMMARY:{b.title}")
+            if b.description:
+                clean_desc = b.description.replace("\n", " ")
+                lines.append(f"DESCRIPTION:{clean_desc}")
+            if b.recurrence_rule:
+                lines.append(f"RRULE:FREQ={b.recurrence_rule.upper()}")
+            lines.append(f"STATUS:{b.status.upper()}")
+            lines.append("END:VEVENT")
+
+        lines.append("END:VCALENDAR")
+        return "\r\n".join(lines)
 
     def _ensure_utc(self, dt: datetime) -> datetime:
         """Ensure datetime object is timezone-aware and converted to UTC."""

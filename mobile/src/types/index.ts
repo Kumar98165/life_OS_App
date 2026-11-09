@@ -33,6 +33,7 @@ export * from './goal';
 export * from './habit';
 export * from './extensions';
 export * from './people';
+export * from './focus';
 
 export interface Note {
   id: string;

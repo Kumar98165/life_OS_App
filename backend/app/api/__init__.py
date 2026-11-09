@@ -14,6 +14,7 @@ from app.blueprints.automations import automations_bp
 from app.blueprints.personalization import personalization_bp
 from app.blueprints.extensions import extensions_bp
 from app.blueprints.people import people_bp
+from app.blueprints.focus import focus_bp
 
 def register_api_blueprints(app: Flask) -> None:
     """Register all API route blueprints to the Flask application."""
@@ -22,6 +23,7 @@ def register_api_blueprints(app: Flask) -> None:
     app.register_blueprint(users_bp, url_prefix="/api/v1/users")
     app.register_blueprint(tasks_bp, url_prefix="/api/v1/tasks")
     app.register_blueprint(planner_bp, url_prefix="/api/v1/planner")
+    app.register_blueprint(focus_bp, url_prefix="/api/v1/focus")
     app.register_blueprint(goals_bp, url_prefix="/api/v1/goals")
     app.register_blueprint(habits_bp, url_prefix="/api/v1/habits")
     app.register_blueprint(finance_bp, url_prefix="/api/v1/finance")

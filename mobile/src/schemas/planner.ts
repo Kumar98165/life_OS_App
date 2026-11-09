@@ -29,6 +29,9 @@ export const plannerBlockFormSchema = z
       .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Must be a valid hex color')
       .optional()
       .nullable(),
+    recurrence_rule: z.enum(['daily', 'weekly', 'monthly', 'weekdays']).optional().nullable(),
+    reminder_minutes_before: z.number().min(0).max(10080).optional().nullable(),
+    timezone: z.string().optional().nullable(),
   })
   .refine(
     (data) => {

@@ -172,6 +172,9 @@ export const PlannerScreen: React.FC = () => {
       status: formData.status,
       task_id: formData.task_id || null,
       color_hex: formData.color_hex || null,
+      recurrence_rule: formData.recurrence_rule || null,
+      reminder_minutes_before: formData.reminder_minutes_before ?? null,
+      timezone: formData.timezone || 'UTC',
     };
 
     if (blockToEdit) {

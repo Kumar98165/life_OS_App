@@ -26,6 +26,9 @@ export interface PlannerBlock {
   status: PlannerBlockStatus;
   color_hex?: string | null;
   is_completed: boolean;
+  recurrence_rule?: string | null;
+  reminder_minutes_before?: number | null;
+  timezone?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +42,9 @@ export interface CreatePlannerBlockPayload {
   status?: PlannerBlockStatus;
   task_id?: string | null;
   color_hex?: string | null;
+  recurrence_rule?: string | null;
+  reminder_minutes_before?: number | null;
+  timezone?: string | null;
 }
 
 export interface UpdatePlannerBlockPayload {
@@ -50,6 +56,9 @@ export interface UpdatePlannerBlockPayload {
   status?: PlannerBlockStatus;
   task_id?: string | null;
   color_hex?: string | null;
+  recurrence_rule?: string | null;
+  reminder_minutes_before?: number | null;
+  timezone?: string | null;
 }
 
 export interface PlannerFilterParams {

@@ -46,6 +46,7 @@ import {
   MoneyScreen,
   ItemLendingScreen,
   PersonLedgerScreen,
+  FocusScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -273,6 +274,11 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="PersonLedger"
               component={PersonLedgerScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="FocusDashboard"
+              component={FocusScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>

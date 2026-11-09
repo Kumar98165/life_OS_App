@@ -58,6 +58,7 @@ export type RootStackParamList = {
   MoneyTracking: undefined;
   ItemLending: undefined;
   PersonLedger: { personName: string };
+  FocusDashboard: undefined;
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;

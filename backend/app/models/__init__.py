@@ -57,6 +57,7 @@ from app.models.people_tracking import (
     ItemLendingRecord,
     PersonActivity,
 )
+from app.models.focus import FocusGoal, FocusSession, FocusDistraction
 
 __all__ = [
     "BaseModel",
@@ -99,6 +100,9 @@ __all__ = [
     "PersonalItem",
     "ItemLendingRecord",
     "PersonActivity",
+    "FocusGoal",
+    "FocusSession",
+    "FocusDistraction",
     "FinancialAccount",
     "FinancialCategory",
     "FinancialTransaction",

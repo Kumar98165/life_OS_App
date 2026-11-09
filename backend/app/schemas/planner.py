@@ -13,6 +13,9 @@ class CreatePlannerBlockRequest(BaseModel):
     status: str = Field("scheduled", pattern="^(scheduled|completed|cancelled|skipped)$")
     task_id: Optional[str] = None
     color_hex: Optional[str] = Field(None, pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
+    recurrence_rule: Optional[str] = Field(None, pattern="^(daily|weekly|monthly|weekdays)$")
+    reminder_minutes_before: Optional[int] = Field(None, ge=0, le=10080)
+    timezone: Optional[str] = Field("UTC", max_length=50)
 
     @field_validator("title")
     @classmethod
@@ -39,6 +42,9 @@ class UpdatePlannerBlockRequest(BaseModel):
     status: Optional[str] = Field(None, pattern="^(scheduled|completed|cancelled|skipped)$")
     task_id: Optional[str] = None
     color_hex: Optional[str] = Field(None, pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$")
+    recurrence_rule: Optional[str] = Field(None, pattern="^(daily|weekly|monthly|weekdays)$")
+    reminder_minutes_before: Optional[int] = Field(None, ge=0, le=10080)
+    timezone: Optional[str] = Field("UTC", max_length=50)
 
     @field_validator("title")
     @classmethod

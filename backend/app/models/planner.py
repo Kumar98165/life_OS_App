@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import String, Text, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy import String, Text, Boolean, Integer, DateTime, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
 
@@ -56,6 +56,19 @@ class PlannerBlock(BaseModel):
         default=False,
         nullable=False
     )
+    recurrence_rule: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True
+    )  # daily, weekly, monthly, weekdays
+    reminder_minutes_before: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+    timezone: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        default="UTC"
+    )
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="planner_blocks")
@@ -81,6 +94,9 @@ class PlannerBlock(BaseModel):
             "status": self.status,
             "color_hex": self.color_hex,
             "is_completed": self.is_completed,
+            "recurrence_rule": self.recurrence_rule,
+            "reminder_minutes_before": self.reminder_minutes_before,
+            "timezone": self.timezone,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

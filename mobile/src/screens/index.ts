@@ -16,6 +16,7 @@ export * from './automations';
 export * from './personalization';
 export * from './extensions';
 export * from './people';
+export * from './focus';
 export * from './placeholders/PlaceholderScreens';
 
 

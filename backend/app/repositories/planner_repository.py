@@ -20,7 +20,10 @@ class PlannerRepository:
         block_type: str = "task",
         status: str = "scheduled",
         task_id: Optional[str] = None,
-        color_hex: Optional[str] = None
+        color_hex: Optional[str] = None,
+        recurrence_rule: Optional[str] = None,
+        reminder_minutes_before: Optional[int] = None,
+        timezone: Optional[str] = "UTC"
     ) -> PlannerBlock:
         """Create and persist a new planner block."""
         is_completed = (status == "completed")
@@ -34,7 +37,10 @@ class PlannerRepository:
             status=status,
             task_id=task_id,
             color_hex=color_hex,
-            is_completed=is_completed
+            is_completed=is_completed,
+            recurrence_rule=recurrence_rule,
+            reminder_minutes_before=reminder_minutes_before,
+            timezone=timezone
         )
         db.session.add(block)
         db.session.commit()

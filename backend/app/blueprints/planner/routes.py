@@ -40,7 +40,10 @@ def create_block():
         block_type=validated.block_type,
         status=validated.status,
         task_id=validated.task_id,
-        color_hex=validated.color_hex
+        color_hex=validated.color_hex,
+        recurrence_rule=validated.recurrence_rule,
+        reminder_minutes_before=validated.reminder_minutes_before,
+        timezone=validated.timezone
     )
 
     return api_response(
@@ -172,4 +175,40 @@ def get_daily_summary():
     return api_response(
         data=summary,
         message="Daily planner summary retrieved successfully"
+    )
+
+
+@planner_bp.route("/free-time", methods=["GET"])
+@jwt_required()
+def get_free_time():
+    """Calculate non-overlapping available free time slots for a day."""
+    user_id = get_jwt_identity()
+    date_str = request.args.get("date")
+    if not date_str:
+        date_str = datetime.utcnow().strftime("%Y-%m-%d")
+    start_hour = request.args.get("start_hour", 8, type=int)
+    end_hour = request.args.get("end_hour", 20, type=int)
+    tz_offset = request.args.get("tz_offset", 0.0, type=float)
+
+    slots = planner_service.get_free_time_slots(
+        user_id=user_id,
+        target_date_str=date_str,
+        start_hour=start_hour,
+        end_hour=end_hour,
+        utc_offset_hours=tz_offset
+    )
+    return api_response(data={"free_slots": slots, "date": date_str}, message="Free time slots calculated")
+
+
+@planner_bp.route("/export.ics", methods=["GET"])
+@jwt_required()
+def export_calendar_ics():
+    """Export all scheduled planner events into an iCalendar (.ics) stream."""
+    from flask import Response
+    user_id = get_jwt_identity()
+    ical_content = planner_service.export_ical(user_id)
+    return Response(
+        ical_content,
+        mimetype="text/calendar",
+        headers={"Content-Disposition": "attachment; filename=lifeos_calendar.ics"}
     )
