@@ -121,3 +121,4 @@ def test_advanced_calendar_free_time_and_ical(client, auth_headers):
     assert "BEGIN:VCALENDAR" in ics_res.text
     assert "SUMMARY:Calendar Meeting Test" in ics_res.text
     assert "RRULE:FREQ=WEEKLY" in ics_res.text
+

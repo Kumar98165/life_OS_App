@@ -30,3 +30,4 @@ class LogDistractionSchema(BaseModel):
 class CompleteFocusSessionSchema(BaseModel):
     actual_duration_seconds: int = Field(..., ge=0)
     notes: Optional[str] = None
+

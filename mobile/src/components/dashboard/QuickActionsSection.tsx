@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { BodyText, Caption } from '../common/Typography';
 
-export type QuickActionType = 'add_task' | 'plan_day' | 'create_goal' | 'talk_ai';
+export type QuickActionType = 'add_task' | 'plan_day' | 'create_goal' | 'focus';
 
 export interface QuickActionsSectionProps {
   onActionPress: (action: QuickActionType) => void;
@@ -21,7 +21,7 @@ const ACTIONS: ActionItem[] = [
   { type: 'add_task', label: 'Add Task', icon: 'add-circle-outline', colorKey: 'primary' },
   { type: 'plan_day', label: 'Plan Day', icon: 'calendar-outline', colorKey: 'info' },
   { type: 'create_goal', label: 'Create Goal', icon: 'flag-outline', colorKey: 'warning' },
-  { type: 'talk_ai', label: 'Talk to AI', icon: 'sparkles-outline', colorKey: 'success' },
+  { type: 'focus', label: 'Focus Mode', icon: 'timer-outline', colorKey: 'success' },
 ];
 
 export const QuickActionsSection: React.FC<QuickActionsSectionProps> = ({ onActionPress }) => {

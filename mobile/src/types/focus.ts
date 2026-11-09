@@ -67,3 +67,4 @@ export interface FreeTimeSlot {
   end_time: string;
   duration_minutes: number;
 }
+

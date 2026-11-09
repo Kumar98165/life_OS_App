@@ -55,6 +55,9 @@ export const DashboardScreen: React.FC = () => {
       case 'create_goal':
         navigation.navigate('GoalsTab');
         break;
+      case 'focus':
+        navigation.navigate('FocusDashboard');
+        break;
     }
   };
 

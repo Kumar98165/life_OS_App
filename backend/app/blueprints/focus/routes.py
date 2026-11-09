@@ -138,3 +138,4 @@ def get_statistics():
     user_id = get_jwt_identity()
     stats = focus_service.get_statistics(user_id)
     return api_response(data={"stats": stats}, message="Focus statistics retrieved")
+

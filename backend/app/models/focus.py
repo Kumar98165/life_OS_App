@@ -218,3 +218,4 @@ class FocusDistraction(BaseModel):
             "logged_at": self.logged_at.isoformat() if self.logged_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+

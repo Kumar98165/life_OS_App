@@ -229,3 +229,4 @@ class FocusService:
             "distractions_logged_today": distractions_count,
             "goal": goal.to_dict()
         }
+

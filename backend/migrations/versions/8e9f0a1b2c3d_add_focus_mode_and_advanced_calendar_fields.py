@@ -101,3 +101,4 @@ def downgrade():
         batch_op.drop_column('timezone')
         batch_op.drop_column('reminder_minutes_before')
         batch_op.drop_column('recurrence_rule')
+

@@ -123,3 +123,4 @@ export function useFreeTimeSlots(dateStr: string) {
     enabled: !!dateStr,
   });
 }
+
