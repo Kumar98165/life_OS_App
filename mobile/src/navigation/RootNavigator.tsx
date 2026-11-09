@@ -42,6 +42,10 @@ import {
   FitnessScreen,
   AssetsScreen,
   BillsScreen,
+  AssignedTasksScreen,
+  MoneyScreen,
+  ItemLendingScreen,
+  PersonLedgerScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -249,6 +253,26 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="Bills"
               component={BillsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AssignedTasks"
+              component={AssignedTasksScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="MoneyTracking"
+              component={MoneyScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="ItemLending"
+              component={ItemLendingScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="PersonLedger"
+              component={PersonLedgerScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>

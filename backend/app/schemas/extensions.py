@@ -258,3 +258,4 @@ class BillPaymentCreateSchema(BaseModel):
     payment_method: Optional[str] = Field("bank_transfer", max_length=50)
     reference_number: Optional[str] = Field(None, max_length=100)
     notes: Optional[str] = None
+

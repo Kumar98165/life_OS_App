@@ -15,6 +15,7 @@ export * from './analytics';
 export * from './automations';
 export * from './personalization';
 export * from './extensions';
+export * from './people';
 export * from './placeholders/PlaceholderScreens';
 
 

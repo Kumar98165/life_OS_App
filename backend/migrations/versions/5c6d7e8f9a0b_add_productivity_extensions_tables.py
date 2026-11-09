@@ -348,3 +348,4 @@ def downgrade():
         batch_op.drop_index('ix_notes_folder_id')
         batch_op.drop_column('folder_id')
     op.drop_table('note_folders')
+

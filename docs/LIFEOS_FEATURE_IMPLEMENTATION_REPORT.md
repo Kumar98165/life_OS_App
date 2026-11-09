@@ -169,3 +169,4 @@ pytest backend/tests/ -v
 
 ## 6. Summary of Pending Issues
 None. The application runs entirely on deterministic business logic, clean database models, validated schemas, and typed React Native components with 100% AI exclusion.
+

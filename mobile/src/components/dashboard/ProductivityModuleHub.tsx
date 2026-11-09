@@ -20,6 +20,9 @@ export const ProductivityModuleHub: React.FC<ModuleHubProps> = ({ onNavigate }) 
     { title: 'Fitness', icon: 'barbell-outline', route: 'Fitness', color: '#FF5252' },
     { title: 'Assets', icon: 'cube-outline', route: 'Assets', color: '#7C4DFF' },
     { title: 'Bills', icon: 'receipt-outline', route: 'Bills', color: '#00E676' },
+    { title: 'Assigned', icon: 'clipboard-outline', route: 'AssignedTasks', color: '#FF4081' },
+    { title: 'Money', icon: 'cash-outline', route: 'MoneyTracking', color: '#FFD600' },
+    { title: 'Item Lend', icon: 'swap-horizontal-outline', route: 'ItemLending', color: '#00B0FF' },
   ];
 
   return (
@@ -50,3 +53,4 @@ const styles = StyleSheet.create({
   moduleItem: { alignItems: 'center', marginRight: 16, width: 56 },
   iconCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
 });
+

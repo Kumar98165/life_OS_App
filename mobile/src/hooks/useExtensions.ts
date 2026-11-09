@@ -198,3 +198,4 @@ export function useBills(params?: { status?: string }) {
 
   return { ...query, createBill, recordPayment };
 }
+

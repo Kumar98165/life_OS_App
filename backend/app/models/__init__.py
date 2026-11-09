@@ -48,6 +48,15 @@ from app.models.extensions import (
     Bill,
     BillPayment,
 )
+from app.models.people_tracking import (
+    AssignedTask,
+    TaskFollowUp,
+    MoneyTransaction,
+    MoneyRepayment,
+    PersonalItem,
+    ItemLendingRecord,
+    PersonActivity,
+)
 
 __all__ = [
     "BaseModel",
@@ -83,6 +92,13 @@ __all__ = [
     "AssetMaintenanceRecord",
     "Bill",
     "BillPayment",
+    "AssignedTask",
+    "TaskFollowUp",
+    "MoneyTransaction",
+    "MoneyRepayment",
+    "PersonalItem",
+    "ItemLendingRecord",
+    "PersonActivity",
     "FinancialAccount",
     "FinancialCategory",
     "FinancialTransaction",

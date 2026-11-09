@@ -254,3 +254,4 @@ def test_bills_and_payments(client, auth_headers):
     assert res.status_code == 200
     assert res.json["data"]["status"] == "paid"
     assert len(res.json["data"]["payments"]) == 1
+

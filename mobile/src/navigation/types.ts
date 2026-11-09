@@ -54,6 +54,10 @@ export type RootStackParamList = {
   Fitness: undefined;
   Assets: undefined;
   Bills: undefined;
+  AssignedTasks: undefined;
+  MoneyTracking: undefined;
+  ItemLending: undefined;
+  PersonLedger: { personName: string };
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
