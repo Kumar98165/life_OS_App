@@ -82,3 +82,4 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_ai_dataset_versions_created_at'))
 
     op.drop_table('ai_dataset_versions')
+

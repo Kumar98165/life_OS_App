@@ -81,3 +81,4 @@ class PrivacySanitizer:
             "redacted_categories": all_redactions,
             "has_critical_leak": has_critical_leak,
         }
+

@@ -99,27 +99,31 @@ flowchart TD
 
 2. **Combined Dataset + Feedback Regression**:
    - `pytest -q backend/tests/test_ai_dataset.py backend/tests/test_ai_feedback.py backend/tests/test_ai_feedback_intelligence.py`
-   - **Result**: `30 passed in 29.16s`.
+   - **Result**: `32 passed in 63.79s`.
 
 3. **Full Backend Test Suite**:
    - `python -m pytest -q backend/tests`
-   - **Result**: `241 passed, 19 warnings in 347.61s (0:05:47)`.
+   - **Result**: `243 passed, 19 warnings in 352s`.
 
 ### 3.2 Mobile Unit Test & Typecheck
 - **TypeScript Compilation**: `npm --prefix mobile run typecheck` passed with 0 errors.
-- **Node Test Runner**: `npm --prefix mobile test` passed with `158 passed in 2.45s`.
+- **Node Test Runner**: `npm --prefix mobile test` passed with `158 passed in 4.79s`.
 
 ---
 
-## 4. Verification Checklist
+## 4. Final Dataset Integrity & Privacy Verification Table
 
-| Requirement | Status | Evidence |
+| Verification | Status | Evidence |
 |---|---|---|
-| **Consent-gated collection** | **VERIFIED** | `AIDatasetService.collect_from_feedback` checks `UserPreference.ai_training_consent`. Tested in `test_pipeline_collects_from_consented_feedback` and `test_pipeline_does_not_collect_without_consent`. |
-| **Consent revocation handling** | **VERIFIED** | Revoking consent sets sample `consent_status = 'revoked'`. JSONL export filter strictly excludes revoked records. Tested in `test_ai_feedback.py::test_training_consent_revocation_invalidates_samples`. |
-| **PII & secret sanitization** | **VERIFIED** | `PrivacySanitizer.sanitize_text` strips emails, phones, tokens, credentials, and keys before saving samples. Tested in `test_privacy_sanitizer_redaction`. |
-| **Deterministic quality validation** | **VERIFIED** | `DatasetQualityValidator.validate_sample` checks lengths, empty text, degenerate copies, and categories. Tested in `test_quality_validator_rules`. |
-| **Immutable version snapshots** | **VERIFIED** | `AIDatasetVersion` computes deterministic SHA-256 manifest hash over normalized JSON records. Snapshots cannot be silently overwritten. Tested in `test_create_dataset_version_and_jsonl_export`. |
-| **Validated JSONL export** | **VERIFIED** | `GET /datasets/versions/<name>/export` streams validated JSONL with `X-Manifest-SHA256` and `X-Sample-Count` response headers. |
-| **Admin RBAC security** | **VERIFIED** | `@admin_required()` protects all dataset routes. Non-admin users receive 403 Forbidden. Tested in `test_admin_rbac_protection_on_dataset_endpoints`. |
-| **Regression tests** | **VERIFIED** | Backend: **241 passed, 0 failed** in 347s. Mobile: **158 passed, 0 failed** in 2.4s. Mobile typecheck: **0 TypeScript errors**. |
+| **Snapshot immutability** | **VERIFIED** | `AIDatasetVersion` records a fixed manifest SHA-256 calculated at snapshot time. Once linked (`dataset_version_id`), sample text cannot be updated. Verified in `test_snapshot_immutability_and_feedback_resubmission`. |
+| **Feedback resubmission safety** | **VERIFIED** | Re-rating or submitting corrections on past messages returns existing feedback but skips modifying any `AITrainingSample` that has already been snapshot-locked. Verified in `test_snapshot_immutability_and_feedback_resubmission`. |
+| **Consent revocation** | **VERIFIED** | Revoking consent (`PATCH /learning/consent`) invalidates candidate records (`consent_status = 'revoked'`). Verified in `test_ai_feedback.py::test_training_consent_revocation_invalidates_samples`. |
+| **Export count accuracy** | **VERIFIED** | `X-Snapshot-Total-Count` reflects total records at snapshot creation, while `X-Sample-Count` accurately reflects currently eligible (consented, sanitized) records. Verified in `test_consent_revocation_excludes_from_export_preserving_snapshot`. |
+| **Export checksum** | **VERIFIED** | Output JSONL payload gets an independent SHA-256 checksum emitted in `X-Export-SHA256` alongside the original snapshot `X-Manifest-SHA256`. Reproducible across identical exports. |
+| **PII sanitization** | **VERIFIED** | Regex rules sanitize emails, phone numbers, SSNs, credit cards, and IP addresses before validation and snapshotting. Tested in `test_privacy_sanitizer_redaction`. Note: Regex is not an infallible guarantee of PII removal; manual audit review is supported. |
+| **Secret redaction** | **VERIFIED** | Secret patterns redact Bearer tokens, API keys, passwords, database URLs, and private keys (`test_privacy_sanitizer_redaction`). Unsanitized raw text never reaches exports. |
+| **Version reproducibility** | **VERIFIED** | Canonical sorted JSON serialization (`json.dumps(..., sort_keys=True)`) and deterministic ordering ensure identical manifests and export hashes for identical inputs. |
+| **Admin authorization** | **VERIFIED** | `@admin_required()` protects all dataset endpoints (`/datasets/samples`, `/datasets/versions`, `/datasets/export`). Standard users receive HTTP 403 Forbidden. Tested in `test_admin_rbac_protection_on_dataset_endpoints`. |
+| **Regression tests** | **VERIFIED** | Full backend test suite: **243 passed, 0 failed**. Full mobile test suite: **158 passed, 0 failed**. Mobile typecheck: **0 TypeScript errors**. |
+
+

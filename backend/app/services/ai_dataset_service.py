@@ -103,6 +103,10 @@ class AIDatasetService:
         # 6. Check if sample already collected for this feedback (idempotent)
         existing = AITrainingSample.query.filter_by(source_feedback_id=feedback.id).first()
         if existing:
+            # If sample is already part of an immutable dataset version snapshot, do not mutate it
+            if existing.dataset_version_id is not None:
+                return existing
+
             existing.prompt_input = sanitized["prompt_input"]
             existing.chosen_response = sanitized["chosen_response"]
             existing.rejected_response = sanitized["rejected_response"]
@@ -294,9 +298,12 @@ class AIDatasetService:
 
         metadata = {
             "version_name": version.version_name,
-            "sample_count": len(samples),
-            "manifest_hash": computed_hash,
+            "snapshot_total_count": version.sample_count,
+            "eligible_export_count": len(samples),
+            "manifest_hash": version.manifest_hash,
+            "export_hash": computed_hash,
             "exported_at": version.exported_at.isoformat()
         }
 
         return export_content, computed_hash, metadata
+

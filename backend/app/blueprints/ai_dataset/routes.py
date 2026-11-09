@@ -176,6 +176,9 @@ def export_version_jsonl(version_name: str):
     # Return as downloadable text/plain or json lines with manifest headers
     response = Response(content, mimetype="application/x-jsonlines")
     response.headers["Content-Disposition"] = f'attachment; filename="{version_name}.jsonl"'
-    response.headers["X-Manifest-SHA256"] = manifest_hash
-    response.headers["X-Sample-Count"] = str(metadata["sample_count"])
+    response.headers["X-Manifest-SHA256"] = metadata["manifest_hash"]
+    response.headers["X-Export-SHA256"] = metadata["export_hash"]
+    response.headers["X-Snapshot-Total-Count"] = str(metadata["snapshot_total_count"])
+    response.headers["X-Sample-Count"] = str(metadata["eligible_export_count"])
     return response
+

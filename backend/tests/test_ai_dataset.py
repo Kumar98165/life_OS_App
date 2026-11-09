@@ -286,3 +286,101 @@ def test_create_dataset_version_and_jsonl_export(client, admin_headers, app):
         assert "completion" in parsed
         assert "type" in parsed
         assert parsed["type"] == "sft"
+
+
+def test_snapshot_immutability_and_feedback_resubmission(client, admin_headers, auth_headers, consented_user_conversation, app):
+    """Verify that feedback resubmission CANNOT mutate training content once locked in a version snapshot."""
+    msg_id = consented_user_conversation["assistant_msg_id"]
+    user_id = consented_user_conversation["user_id"]
+
+    # 1. User submits initial feedback (+1)
+    fb_resp = client.post(
+        "/api/v1/ai/feedback",
+        json={"message_id": msg_id, "rating": 1, "feedback_type": "thumbs_up"},
+        headers=auth_headers
+    )
+    assert fb_resp.status_code == 201
+    fb_id = fb_resp.get_json()["data"]["feedback"]["id"]
+
+    with app.app_context():
+        sample = AITrainingSample.query.filter_by(source_feedback_id=fb_id).first()
+        assert sample is not None
+        assert sample.chosen_response == "Focus from 9 AM to 11 AM."
+        sample_id = sample.id
+
+    # 2. Admin snapshots the dataset
+    ver_resp = client.post(
+        "/api/v1/ai/datasets/versions",
+        json={"version_name": "v_snapshot_lock", "dataset_type": "sft"},
+        headers=admin_headers
+    )
+    assert ver_resp.status_code == 201
+
+    with app.app_context():
+        locked_sample = db.session.get(AITrainingSample, sample_id)
+        assert locked_sample.dataset_version_id is not None
+        initial_chosen = locked_sample.chosen_response
+
+    # 3. User attempts to update feedback with a suggested response correction
+    resubmit_resp = client.post(
+        "/api/v1/ai/feedback",
+        json={
+            "message_id": msg_id,
+            "rating": -1,
+            "feedback_type": "correction",
+            "suggested_response": "Malicious or altered suggestion"
+        },
+        headers=auth_headers
+    )
+    assert resubmit_resp.status_code == 200
+
+    # 4. Verify the snapshot-locked sample was NOT altered
+    with app.app_context():
+        sample_after = db.session.get(AITrainingSample, sample_id)
+        assert sample_after.chosen_response == initial_chosen
+        assert "Malicious" not in sample_after.chosen_response
+
+
+def test_consent_revocation_excludes_from_export_preserving_snapshot(client, admin_headers, auth_headers, consented_user_conversation, app):
+    """Verify that withdrawing consent excludes user records from subsequent exports while preserving original snapshot manifest."""
+    msg_id = consented_user_conversation["assistant_msg_id"]
+    user_id = consented_user_conversation["user_id"]
+
+    # 1. Collect sample
+    client.post(
+        "/api/v1/ai/feedback",
+        json={"message_id": msg_id, "rating": 1, "feedback_type": "thumbs_up"},
+        headers=auth_headers
+    )
+
+    # 2. Admin creates snapshot version
+    ver_resp = client.post(
+        "/api/v1/ai/datasets/versions",
+        json={"version_name": "v_consent_audit", "dataset_type": "sft"},
+        headers=admin_headers
+    )
+    assert ver_resp.status_code == 201
+    orig_manifest_hash = ver_resp.get_json()["data"]["version"]["manifest_hash"]
+
+    # 3. Initial export contains the record
+    exp1 = client.get("/api/v1/ai/datasets/versions/v_consent_audit/export", headers=admin_headers)
+    assert exp1.status_code == 200
+    assert exp1.headers["X-Sample-Count"] == "1"
+
+    # 4. User revokes training consent
+    rev_resp = client.patch(
+        "/api/v1/ai/learning/consent",
+        json={"ai_training_consent": False},
+        headers=auth_headers
+    )
+    assert rev_resp.status_code == 200
+
+    # 5. Subsequent export automatically excludes the revoked sample
+    exp2 = client.get("/api/v1/ai/datasets/versions/v_consent_audit/export", headers=admin_headers)
+    assert exp2.status_code == 200
+    assert exp2.headers["X-Sample-Count"] == "0"
+    assert exp2.headers["X-Snapshot-Total-Count"] == "1"
+    # Original snapshot manifest remains immutable
+    assert exp2.headers["X-Manifest-SHA256"] == orig_manifest_hash
+
+
