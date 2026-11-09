@@ -23,7 +23,8 @@ class AIMemoryRepository:
         status: str = "pending",
         source_conversation_id: Optional[str] = None,
         source_message_id: Optional[str] = None,
-        expires_at: Optional[datetime] = None
+        expires_at: Optional[datetime] = None,
+        embedding: Optional[Dict[str, Any]] = None
     ) -> AIMemory:
         """Create and persist a new memory record."""
         memory = AIMemory(
@@ -35,7 +36,8 @@ class AIMemoryRepository:
             status=status,
             source_conversation_id=source_conversation_id,
             source_message_id=source_message_id,
-            expires_at=expires_at
+            expires_at=expires_at,
+            embedding=embedding
         )
         db.session.add(memory)
         db.session.commit()

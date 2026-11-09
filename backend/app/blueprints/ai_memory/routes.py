@@ -154,7 +154,8 @@ def approve_suggestion(memory_id: str):
         current_user_id=user_id,
         edited_key=validated.get_resolved_key(),
         edited_value=validated.get_resolved_value(),
-        edited_type=validated.get_resolved_type()
+        edited_type=validated.get_resolved_type(),
+        supersede_existing_id=validated.supersede_existing_id
     )
 
     return api_response(

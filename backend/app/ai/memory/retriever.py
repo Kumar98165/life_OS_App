@@ -38,14 +38,14 @@ class MemoryRetrievalEngine:
 
         now = datetime.now(timezone.utc)
 
-        # Base query: confirmed status, belongs to user, unexpired
+        # Base query: confirmed status, belongs to user, unexpired (and excludes rejected/pending/archived)
         base_query = AIMemory.query.filter(
             AIMemory.user_id == user_id,
             AIMemory.status == "confirmed",
             or_(AIMemory.expires_at.is_(None), AIMemory.expires_at > now)
         )
 
-        if category:
+        if category and category != "all":
             base_query = base_query.filter(AIMemory.memory_type == category)
 
         memories = base_query.all()
@@ -67,6 +67,17 @@ class MemoryRetrievalEngine:
 
             # Bonus for confidence
             score += float(mem.confidence or 0.8)
+
+            # Bonus for recency of confirmation or last access (within last 30 days)
+            ref_dt = mem.last_accessed_at or mem.created_at
+            if ref_dt:
+                if ref_dt.tzinfo is None:
+                    ref_dt = ref_dt.replace(tzinfo=timezone.utc)
+                age_days = (now - ref_dt).total_seconds() / 86400.0
+                if age_days < 7:
+                    score += 1.0
+                elif age_days < 30:
+                    score += 0.5
 
             scored_memories.append((score, mem))
 

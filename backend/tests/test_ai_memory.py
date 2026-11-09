@@ -301,3 +301,70 @@ def test_trivial_message_filtering():
     assert _is_trivial_message("ok") is True
     assert _is_trivial_message("I usually do my workout at 7:00 AM before starting work.") is False
 
+
+def test_duplicate_and_contradiction_detection(app, client, auth_headers):
+    """Test exact duplicate exclusion and contradiction detection in memory candidates."""
+    from app.services.ai_memory_service import AIMemoryService
+    from app.ai.memory.comparison import memory_comparison_engine
+    from app.models.ai import AIMemory
+    from app.models.user import User
+
+    prof_resp = client.get("/api/v1/users/me", headers=auth_headers)
+    uid = prof_resp.get_json()["data"]["user"]["id"]
+    service = AIMemoryService()
+
+    with app.app_context():
+        # Seed an existing confirmed memory
+        m1 = service.create_memory(
+            user_id=uid,
+            memory_key="AI Response Length",
+            memory_value="User prefers short responses",
+            memory_type="preference",
+            status="confirmed"
+        )
+
+        existing_list = [m1]
+
+        # 1. Exact duplicate check
+        dup_res = memory_comparison_engine.check_duplicate_or_contradiction(
+            candidate_key="AI Response Length",
+            candidate_value="User prefers short responses",
+            candidate_type="preference",
+            existing_memories=existing_list
+        )
+        assert dup_res["is_duplicate"] is True
+        assert dup_res["duplicate_memory_id"] == m1.id
+
+        # 2. Contradiction check (short vs detailed)
+        contra_res = memory_comparison_engine.check_duplicate_or_contradiction(
+            candidate_key="AI Response Length",
+            candidate_value="User now prefers detailed responses",
+            candidate_type="preference",
+            existing_memories=existing_list
+        )
+        assert contra_res["is_contradiction"] is True
+        assert contra_res["contradicting_memory_id"] == m1.id
+
+        # 3. User approves candidate and supersedes old memory
+        m_pending = service.memory_repo.create_memory(
+            user_id=uid,
+            memory_key="AI Response Length",
+            memory_value="User now prefers detailed responses",
+            memory_type="preference",
+            status="pending",
+            embedding={"contradiction": {"contradicting_memory_id": m1.id}}
+        )
+
+        approved = service.approve_suggestion(
+            memory_id=m_pending.id,
+            current_user_id=uid,
+            supersede_existing_id=m1.id
+        )
+        assert approved.status == "confirmed"
+        assert approved.memory_value == "User now prefers detailed responses"
+
+        # Verify old memory was safely archived, not destroyed or silently overwritten
+        old_refreshed = service.memory_repo.get_by_id(m1.id)
+        assert old_refreshed.status == "archived"
+
+

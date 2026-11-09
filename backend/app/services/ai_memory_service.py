@@ -131,12 +131,24 @@ class AIMemoryService:
         current_user_id: str,
         edited_key: Optional[str] = None,
         edited_value: Optional[str] = None,
-        edited_type: Optional[str] = None
+        edited_type: Optional[str] = None,
+        supersede_existing_id: Optional[str] = None
     ) -> AIMemory:
-        """Promote a pending suggestion to confirmed memory."""
+        """Promote a pending suggestion to confirmed memory, optionally archiving/superseding a contradicted existing memory."""
         memory = self.get_memory(memory_id, current_user_id)
         if memory.status != "pending":
             raise BadRequestException(f"Cannot approve memory with status '{memory.status}'")
+
+        # If user confirmed superseding an existing contradicted memory
+        target_supersede = supersede_existing_id
+        if not target_supersede and memory.embedding and isinstance(memory.embedding, dict):
+            contra_info = memory.embedding.get("contradiction", {})
+            target_supersede = contra_info.get("contradicting_memory_id")
+
+        if target_supersede:
+            old_mem = self.memory_repo.get_by_id(target_supersede)
+            if old_mem and old_mem.user_id == current_user_id and old_mem.status == "confirmed":
+                self.memory_repo.update_memory(old_mem, {"status": "archived"})
 
         updates: Dict[str, Any] = {"status": "confirmed"}
         if edited_key:
@@ -169,19 +181,48 @@ class AIMemoryService:
         source_conversation_id: Optional[str] = None,
         source_message_id: Optional[str] = None
     ) -> List[AIMemory]:
-        """Extract candidate suggestions and persist them strictly as pending."""
+        """Extract candidate suggestions, check for duplicates and contradictions, and persist strictly as pending."""
+        from app.ai.memory.comparison import memory_comparison_engine
+
         candidates = self.extractor.extract_candidates(user_message, assistant_response)
+        if not candidates:
+            return []
+
+        # Retrieve user's existing confirmed and pending memories to check duplicates/contradictions
+        existing_memories, _ = self.memory_repo.list_for_user(
+            user_id=user_id,
+            status="confirmed",
+            limit=100
+        )
+        pending_memories, _ = self.memory_repo.list_for_user(
+            user_id=user_id,
+            status="pending",
+            limit=100
+        )
+        all_user_memories = existing_memories + pending_memories
+
         persisted = []
 
         for c in candidates:
-            # Check duplicate
-            existing = self.memory_repo.find_duplicate(
-                user_id=user_id,
-                memory_key=c["memory_key"],
-                memory_type=c["memory_type"]
+            comp_result = memory_comparison_engine.check_duplicate_or_contradiction(
+                candidate_key=c["memory_key"],
+                candidate_value=c["memory_value"],
+                candidate_type=c["memory_type"],
+                existing_memories=all_user_memories
             )
-            if existing:
+
+            # Skip exact or near duplicates
+            if comp_result["is_duplicate"]:
                 continue
+
+            # If contradiction detected, annotate the pending memory metadata for user review
+            embedding_metadata = {}
+            if comp_result["is_contradiction"]:
+                embedding_metadata["contradiction"] = {
+                    "contradicting_memory_id": comp_result["contradicting_memory_id"],
+                    "reason": comp_result["contradiction_reason"],
+                    "is_update_candidate": True,
+                }
 
             mem = self.memory_repo.create_memory(
                 user_id=user_id,
@@ -191,9 +232,11 @@ class AIMemoryService:
                 confidence=c["confidence"],
                 status="pending",
                 source_conversation_id=source_conversation_id,
-                source_message_id=source_message_id
+                source_message_id=source_message_id,
+                embedding=embedding_metadata if embedding_metadata else None
             )
             persisted.append(mem)
+            all_user_memories.append(mem)
 
         return persisted
 

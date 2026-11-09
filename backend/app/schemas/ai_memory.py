@@ -50,6 +50,9 @@ class ApproveSuggestionRequest(BaseModel):
     memory_value: Optional[str] = Field(None, max_length=5000)
     memory_type: Optional[str] = Field(None, pattern="^(preference|personal_context|goal_decision|routine_pattern|fact)$")
 
+    # Optional ID of an older confirmed memory to archive when approving an updated fact
+    supersede_existing_id: Optional[str] = Field(None, max_length=36)
+
     def get_resolved_key(self) -> Optional[str]:
         return self.edited_key or self.memory_key
 

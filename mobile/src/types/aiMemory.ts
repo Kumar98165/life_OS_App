@@ -21,6 +21,7 @@ export interface AIMemory {
   status: AIMemoryStatus;
   source_conversation_id?: string | null;
   source_message_id?: string | null;
+  embedding?: Record<string, any> | null;
   last_accessed_at?: string | null;
   expires_at?: string | null;
   created_at: string;
@@ -51,6 +52,7 @@ export interface ApproveSuggestionPayload {
   edited_key?: string;
   edited_value?: string;
   edited_type?: AIMemoryCategory;
+  supersede_existing_id?: string;
 }
 
 export interface MemorySettings {

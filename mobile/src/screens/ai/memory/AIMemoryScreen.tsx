@@ -477,6 +477,26 @@ export const AIMemoryScreen: React.FC = () => {
                 <BodyText weight="700" style={styles.memKey}>
                   {suggestion.memory_key}
                 </BodyText>
+                {suggestion.embedding && suggestion.embedding.contradiction && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: `${theme.colors.warning}15`,
+                      borderWidth: 1,
+                      borderColor: `${theme.colors.warning}30`,
+                      borderRadius: 8,
+                      padding: 8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Ionicons name="swap-horizontal" size={16} color={theme.colors.warning} style={{ marginRight: 6 }} />
+                    <Caption style={{ color: theme.colors.warning, flex: 1, fontWeight: '600' }}>
+                      {suggestion.embedding.contradiction.reason || 'Conflicts with an existing memory. Approving will update/supersede it.'}
+                    </Caption>
+                  </View>
+                )}
+
                 <BodyText color="secondary" style={styles.memVal}>
                   {suggestion.memory_value}
                 </BodyText>
