@@ -111,5 +111,23 @@ export interface DailyBriefing {
   priority_suggestions: string[];
 }
 
+export interface FeedbackImprovementRecommendation {
+  area: string;
+  recommendation: string;
+  severity: 'high' | 'medium' | 'low' | 'info';
+}
+
+export interface FeedbackAnalytics {
+  user_id: string;
+  window_days: number;
+  total_feedback_count: number;
+  positive_count: number;
+  negative_count: number;
+  satisfaction_percentage: number;
+  negative_categories: Record<string, number>;
+  feedback_types: Record<string, number>;
+  improvement_recommendations: FeedbackImprovementRecommendation[];
+}
+
 
 

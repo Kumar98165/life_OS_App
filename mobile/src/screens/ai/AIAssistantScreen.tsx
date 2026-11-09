@@ -19,6 +19,7 @@ import {
   useAISendMessage,
   useAIDeleteConversation,
   useAIHealth,
+  useAISubmitFeedback,
 } from '../../hooks/useAI';
 import { aiService } from '../../services/aiService';
 import { useQueryClient } from '@tanstack/react-query';
@@ -70,6 +71,8 @@ export const AIAssistantScreen: React.FC = () => {
   const { data: healthData } = useAIHealth();
   const sendMessageMutation = useAISendMessage();
   const deleteConversationMutation = useAIDeleteConversation();
+  const submitFeedbackMutation = useAISubmitFeedback();
+  const [ratedMessages, setRatedMessages] = useState<Record<string, number>>({});
 
   // Sync server history into local state
   useEffect(() => {
@@ -390,29 +393,112 @@ export const AIAssistantScreen: React.FC = () => {
                       </View>
                     )}
 
-                    <View
-                      style={[
-                        styles.messageBubble,
-                        isUser
-                          ? [styles.userBubble, { backgroundColor: theme.colors.primary }]
-                          : [
-                              styles.assistantBubble,
-                              {
-                                backgroundColor: theme.colors.glassBackgroundSolid,
-                                borderColor: theme.colors.glassBorder,
-                              },
-                              theme.shadows.subtle,
-                            ],
-                      ]}
-                    >
-                      <BodyText
-                        style={{
-                          color: isUser ? '#FFFFFF' : theme.colors.textPrimary,
-                          lineHeight: 22,
-                        }}
+                    <View style={{ maxWidth: '82%' }}>
+                      <View
+                        style={[
+                          styles.messageBubble,
+                          isUser
+                            ? [styles.userBubble, { backgroundColor: theme.colors.primary }]
+                            : [
+                                styles.assistantBubble,
+                                {
+                                  backgroundColor: theme.colors.glassBackgroundSolid,
+                                  borderColor: theme.colors.glassBorder,
+                                },
+                                theme.shadows.subtle,
+                              ],
+                        ]}
                       >
-                        {msg.content}
-                      </BodyText>
+                        <BodyText
+                          style={{
+                            color: isUser ? '#FFFFFF' : theme.colors.textPrimary,
+                            lineHeight: 22,
+                          }}
+                        >
+                          {msg.content}
+                        </BodyText>
+                      </View>
+
+                      {!isUser && msg.id && (
+                        <View style={styles.feedbackRow}>
+                          <TouchableOpacity
+                            onPress={async () => {
+                              try {
+                                const newRating = ratedMessages[msg.id] === 1 ? 0 : 1;
+                                if (newRating === 1) {
+                                  await submitFeedbackMutation.mutateAsync({
+                                    message_id: msg.id,
+                                    rating: 1,
+                                    feedback_type: 'thumbs_up',
+                                  });
+                                  setRatedMessages((prev) => ({ ...prev, [msg.id]: 1 }));
+                                  showToast('Thanks for the feedback!');
+                                }
+                              } catch {
+                                showToast('Failed to record feedback');
+                              }
+                            }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            style={[
+                              styles.feedbackBtn,
+                              ratedMessages[msg.id] === 1 && {
+                                backgroundColor: `${theme.colors.primary}20`,
+                              },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel="Helpful response"
+                          >
+                            <Ionicons
+                              name={ratedMessages[msg.id] === 1 ? 'thumbs-up' : 'thumbs-up-outline'}
+                              size={13}
+                              color={
+                                ratedMessages[msg.id] === 1
+                                  ? theme.colors.primary
+                                  : theme.colors.textMuted
+                              }
+                            />
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={async () => {
+                              try {
+                                const newRating = ratedMessages[msg.id] === -1 ? 0 : -1;
+                                if (newRating === -1) {
+                                  await submitFeedbackMutation.mutateAsync({
+                                    message_id: msg.id,
+                                    rating: -1,
+                                    feedback_type: 'thumbs_down',
+                                    category: 'other',
+                                  });
+                                  setRatedMessages((prev) => ({ ...prev, [msg.id]: -1 }));
+                                  showToast('Feedback noted to improve assistance');
+                                }
+                              } catch {
+                                showToast('Failed to record feedback');
+                              }
+                            }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            style={[
+                              styles.feedbackBtn,
+                              ratedMessages[msg.id] === -1 && {
+                                backgroundColor: `${theme.colors.error}20`,
+                              },
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityLabel="Not helpful response"
+                          >
+                            <Ionicons
+                              name={ratedMessages[msg.id] === -1 ? 'thumbs-down' : 'thumbs-down-outline'}
+                              size={13}
+                              color={
+                                ratedMessages[msg.id] === -1
+                                  ? theme.colors.error
+                                  : theme.colors.textMuted
+                              }
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   </View>
                 );
@@ -876,5 +962,16 @@ const styles = StyleSheet.create({
   },
   deleteThreadBtn: {
     padding: 6,
+  },
+  feedbackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    paddingLeft: 4,
+  },
+  feedbackBtn: {
+    padding: 4,
+    borderRadius: 6,
   },
 });

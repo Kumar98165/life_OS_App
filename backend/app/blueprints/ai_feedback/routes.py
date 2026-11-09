@@ -11,10 +11,30 @@ from app.schemas.ai_feedback import (
     UpdateConsentRequest,
 )
 from app.services.ai_feedback_service import AIFeedbackService
+from app.services.feedback_intelligence_service import feedback_intelligence_service
 from app.core.response import api_response
 
 ai_feedback_bp = Blueprint("ai_feedback", __name__)
 feedback_service = AIFeedbackService()
+
+
+# ---------------------------------------------------------
+# Feedback Intelligence & Analytics
+# ---------------------------------------------------------
+
+@ai_feedback_bp.route("/feedback/analytics", methods=["GET"])
+@jwt_required()
+def get_feedback_analytics():
+    """Retrieve user-scoped AI feedback statistics, category breakdown, and recommendations."""
+    user_id = get_jwt_identity()
+    days = request.args.get("days", 30, type=int)
+    analytics = feedback_intelligence_service.get_user_feedback_analytics(user_id=user_id, days=days)
+
+    return api_response(
+        data=analytics,
+        message="Feedback intelligence analytics retrieved successfully",
+        status_code=200
+    )
 
 
 # ---------------------------------------------------------

@@ -303,6 +303,17 @@ export const aiService = {
     );
     return response.data.data.insights;
   },
+
+  /**
+   * Retrieve feedback intelligence analytics and recommendations.
+   */
+  async getFeedbackAnalytics(days: number = 30): Promise<import('../types/ai').FeedbackAnalytics> {
+    const response = await apiClient.get<ApiResponse<import('../types/ai').FeedbackAnalytics>>(
+      '/ai/feedback/analytics',
+      { params: { days } }
+    );
+    return response.data.data;
+  },
 };
 
 

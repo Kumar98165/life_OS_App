@@ -134,5 +134,13 @@ export function useAIProactiveInsights() {
   });
 }
 
+export function useAIFeedbackAnalytics(days: number = 30) {
+  return useQuery({
+    queryKey: ['ai_feedback_analytics', days],
+    queryFn: () => aiService.getFeedbackAnalytics(days),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
 
 
