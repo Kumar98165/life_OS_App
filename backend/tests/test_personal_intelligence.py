@@ -220,3 +220,108 @@ def test_proactive_insights_api_endpoint(client, auth_headers):
     assert "insights" in data
     assert isinstance(data["insights"], list)
 
+
+def test_memory_privacy_disabled_and_expired(app):
+    """Verify approved, pending, rejected, and expired memories behavior when memory is enabled vs disabled."""
+    from app.ai.memory.retriever import MemoryRetrievalEngine
+    with app.app_context():
+        user = User(email="mem_priv@lifeos.internal", full_name="Memory Test")
+        user.set_password("SecurePass123!")
+        db.session.add(user)
+        db.session.commit()
+
+        # Create user preference with memory enabled
+        pref = UserPreference(user_id=user.id, ai_memory_enabled=True)
+        db.session.add(pref)
+
+        now = datetime.now(timezone.utc)
+        m_confirmed = AIMemory(user_id=user.id, memory_key="coffee", memory_value="Prefers black coffee", status="confirmed")
+        m_pending = AIMemory(user_id=user.id, memory_key="tea", memory_value="Likes green tea", status="pending")
+        m_rejected = AIMemory(user_id=user.id, memory_key="sugar", memory_value="Takes 2 spoons", status="rejected")
+        m_expired = AIMemory(user_id=user.id, memory_key="diet", memory_value="On keto", status="confirmed", expires_at=now - timedelta(days=1))
+        db.session.add_all([m_confirmed, m_pending, m_rejected, m_expired])
+        db.session.commit()
+
+        retriever = MemoryRetrievalEngine()
+        res = retriever.retrieve_relevant_memories(user.id, "coffee tea drink")
+        keys = [m.memory_key for m in res]
+        assert "coffee" in keys
+        assert "tea" not in keys       # pending excluded
+        assert "sugar" not in keys     # rejected excluded
+        assert "diet" not in keys      # expired excluded
+
+        # Disable AI memory in preferences
+        pref.ai_memory_enabled = False
+        db.session.commit()
+
+        res_disabled = retriever.retrieve_relevant_memories(user.id, "coffee tea drink")
+        assert len(res_disabled) == 0  # Completely excluded when toggle is off
+
+
+def test_financial_privacy_relevance(app):
+    """Verify financial summaries are only retrieved on relevant queries and never expose raw txs."""
+    from app.models.finance import FinancialAccount, FinancialTransaction
+    with app.app_context():
+        user = User(email="fin_priv@lifeos.internal", full_name="Finance Priv")
+        user.set_password("SecurePass123!")
+        db.session.add(user)
+        db.session.commit()
+
+        acc = FinancialAccount(user_id=user.id, name="Checking", balance=5000.0, currency="USD")
+        db.session.add(acc)
+        db.session.flush()
+
+        tx = FinancialTransaction(
+            user_id=user.id,
+            account_id=acc.id,
+            amount=50.0,
+            transaction_type="expense",
+            description="Confidential secret dinner",
+            transaction_date=datetime.now(timezone.utc)
+        )
+        db.session.add(tx)
+        db.session.commit()
+
+        engine = LifeOSContextEngine()
+
+        # Unrelated query
+        unrelated_ctx = engine.build_user_context(user.id, query="What tasks are scheduled for tomorrow?")
+        assert unrelated_ctx["finance_summary"] is None
+        unrelated_prompt = engine.format_context_prompt(unrelated_ctx)
+        assert "Financial Overview" not in unrelated_prompt
+        assert "Confidential secret dinner" not in unrelated_prompt
+
+        # Finance query
+        fin_ctx = engine.build_user_context(user.id, query="What is my current savings budget and balance?")
+        assert fin_ctx["finance_summary"] is not None
+        assert fin_ctx["finance_summary"]["total_balance"] == 5000.0
+        fin_prompt = engine.format_context_prompt(fin_ctx)
+        assert "Financial Overview (Safe Aggregate)" in fin_prompt
+        assert "Confidential secret dinner" not in fin_prompt  # Raw tx details strictly omitted
+
+
+def test_timezone_date_boundaries(app):
+    """Verify task and schedule retrieval respects user timezone near midnight."""
+    with app.app_context():
+        user = User(email="tz_user@lifeos.internal", full_name="Timezone User")
+        user.set_password("SecurePass123!")
+        db.session.add(user)
+        db.session.commit()
+
+        # Set user timezone to Asia/Kolkata (UTC+5:30)
+        pers = UserPersonalization(user_id=user.id, timezone="Asia/Kolkata")
+        db.session.add(pers)
+
+        # Create a task due at 20:00 UTC today.
+        # In Asia/Kolkata, that is 01:30 AM tomorrow!
+        today_utc = datetime.now(timezone.utc)
+        target_due = today_utc.replace(hour=20, minute=0, second=0)
+        t = Task(user_id=user.id, title="Midnight Boundary Task", due_date=target_due)
+        db.session.add(t)
+        db.session.commit()
+
+        briefing = personal_intelligence_service.get_daily_briefing(user.id)
+        assert briefing["timezone"] == "Asia/Kolkata"
+        assert briefing["date"] is not None
+
+

@@ -38,22 +38,26 @@ def get_pending_tasks(user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
 
 def get_today_tasks(user_id: str, limit: int = 10, target_date: Optional[date] = None, tz_name: str = "UTC") -> List[Dict[str, Any]]:
     """Retrieve tasks due on target date (or today in user's timezone) for user."""
-    if not target_date:
-        try:
-            tz = ZoneInfo(tz_name)
-            target_date = datetime.now(tz).date()
-        except Exception:
-            target_date = date.today()
+    try:
+        user_tz = ZoneInfo(tz_name)
+    except Exception:
+        user_tz = timezone.utc
 
-    start_of_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=timezone.utc)
-    end_of_day = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=timezone.utc)
+    if not target_date:
+        target_date = datetime.now(user_tz).date()
+
+    # Convert user's local start of day and end of day to UTC for accurate database querying
+    start_local = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=user_tz)
+    end_local = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=user_tz)
+    start_utc = start_local.astimezone(timezone.utc)
+    end_utc = end_local.astimezone(timezone.utc)
 
     tasks = (
         Task.query
         .filter(
             Task.user_id == user_id,
-            Task.due_date >= start_of_day,
-            Task.due_date <= end_of_day
+            Task.due_date >= start_utc,
+            Task.due_date <= end_utc
         )
         .order_by(Task.status.asc(), Task.priority.desc())
         .limit(limit)
@@ -191,21 +195,26 @@ def get_today_habits(user_id: str, target_date: Optional[date] = None, tz_name: 
 
 def get_today_schedule(user_id: str, target_date: Optional[date] = None, tz_name: str = "UTC") -> List[Dict[str, Any]]:
     """Retrieve target date planner blocks in chronological order and detect overlaps."""
-    if not target_date:
-        try:
-            tz = ZoneInfo(tz_name)
-            target_date = datetime.now(tz).date()
-        except Exception:
-            target_date = date.today()
+    try:
+        user_tz = ZoneInfo(tz_name)
+    except Exception:
+        user_tz = timezone.utc
 
-    start_of_day = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=timezone.utc)
-    end_of_day = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=timezone.utc)
+    if not target_date:
+        target_date = datetime.now(user_tz).date()
+
+    # Convert user's local start of day and end of day to UTC for accurate database querying
+    start_local = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=user_tz)
+    end_local = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=user_tz)
+    start_utc = start_local.astimezone(timezone.utc)
+    end_utc = end_local.astimezone(timezone.utc)
+
     blocks = (
         PlannerBlock.query
         .filter(
             PlannerBlock.user_id == user_id,
-            PlannerBlock.start_time >= start_of_day,
-            PlannerBlock.start_time <= end_of_day
+            PlannerBlock.start_time >= start_utc,
+            PlannerBlock.start_time <= end_utc
         )
         .order_by(PlannerBlock.start_time.asc())
         .all()
