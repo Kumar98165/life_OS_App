@@ -71,10 +71,11 @@ def test_feedback_analytics_empty_state(client, auth_headers):
     assert data["total_feedback_count"] == 0
     assert data["positive_count"] == 0
     assert data["negative_count"] == 0
-    assert data["satisfaction_percentage"] == 100.0
+    assert data["satisfaction_percentage"] is None
     assert data["negative_categories"] == {}
     assert len(data["improvement_recommendations"]) >= 1
     assert data["improvement_recommendations"][0]["area"] == "general"
+    assert data["improvement_recommendations"][0]["severity"] == "info"
 
 
 def test_feedback_analytics_calculations_and_recommendations(

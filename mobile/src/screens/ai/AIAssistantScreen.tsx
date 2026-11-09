@@ -41,6 +41,15 @@ const STARTER_PROMPTS = [
   { icon: 'calendar-outline', text: 'What does my planner schedule look like?' },
 ];
 
+const FEEDBACK_CATEGORIES = [
+  { id: 'incorrect_answer', label: 'Incorrect Answer' },
+  { id: 'poor_explanation', label: 'Poor Explanation' },
+  { id: 'incomplete_answer', label: 'Incomplete' },
+  { id: 'wrong_tone', label: 'Wrong Tone' },
+  { id: 'outdated_context', label: 'Outdated Info' },
+  { id: 'other', label: 'Other Issue' },
+];
+
 export const AIAssistantScreen: React.FC = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -73,6 +82,10 @@ export const AIAssistantScreen: React.FC = () => {
   const deleteConversationMutation = useAIDeleteConversation();
   const submitFeedbackMutation = useAISubmitFeedback();
   const [ratedMessages, setRatedMessages] = useState<Record<string, number>>({});
+  const [feedbackModalMessageId, setFeedbackModalMessageId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('other');
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [isSubmittingDetails, setIsSubmittingDetails] = useState(false);
 
   // Sync server history into local state
   useEffect(() => {
@@ -471,7 +484,10 @@ export const AIAssistantScreen: React.FC = () => {
                                     category: 'other',
                                   });
                                   setRatedMessages((prev) => ({ ...prev, [msg.id]: -1 }));
-                                  showToast('Feedback noted to improve assistance');
+                                  // Open optional lightweight feedback details dialog
+                                  setSelectedCategory('other');
+                                  setFeedbackComment('');
+                                  setFeedbackModalMessageId(msg.id);
                                 }
                               } catch {
                                 showToast('Failed to record feedback');
@@ -743,6 +759,149 @@ export const AIAssistantScreen: React.FC = () => {
         </View>
       </Modal>
 
+      {/* Optional Negative Feedback Details Modal */}
+      <Modal
+        visible={!!feedbackModalMessageId}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setFeedbackModalMessageId(null)}
+      >
+        <View style={styles.historyModalOverlay}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={() => setFeedbackModalMessageId(null)}
+          />
+
+          <GlassCard elevation="floating" style={styles.feedbackDetailCard}>
+            <View style={styles.historyHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="thumbs-down" size={18} color={theme.colors.error} />
+                <Heading level={3}>Help Improve LifeOS</Heading>
+              </View>
+              <TouchableOpacity
+                onPress={() => setFeedbackModalMessageId(null)}
+                style={[styles.iconActionBtn, { borderColor: theme.colors.glassBorder }]}
+                accessibilityRole="button"
+                accessibilityLabel="Close feedback details dialog"
+              >
+                <Ionicons name="close" size={18} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <Caption color="secondary" style={{ marginBottom: 14 }}>
+              What went wrong with this response? (Optional)
+            </Caption>
+
+            {/* Category Chips */}
+            <View style={styles.categoryChipGrid}>
+              {FEEDBACK_CATEGORIES.map((cat) => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    onPress={() => setSelectedCategory(cat.id)}
+                    style={[
+                      styles.categoryChip,
+                      {
+                        backgroundColor: isSelected
+                          ? `${theme.colors.primary}20`
+                          : theme.colors.surfaceSubtle,
+                        borderColor: isSelected
+                          ? theme.colors.primary
+                          : theme.colors.glassBorder,
+                      },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <Caption
+                      weight={isSelected ? '700' : '500'}
+                      style={{
+                        color: isSelected ? theme.colors.primary : theme.colors.textSecondary,
+                      }}
+                    >
+                      {cat.label}
+                    </Caption>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Optional Written Comment Input */}
+            <TextInput
+              style={[
+                styles.feedbackCommentInput,
+                {
+                  color: theme.colors.textPrimary,
+                  backgroundColor: theme.colors.surfaceSubtle,
+                  borderColor: theme.colors.glassBorder,
+                },
+              ]}
+              placeholder="Add details or suggestions (optional)..."
+              placeholderTextColor={theme.colors.textMuted}
+              value={feedbackComment}
+              onChangeText={setFeedbackComment}
+              multiline
+              maxLength={500}
+            />
+
+            {/* Actions */}
+            <View style={styles.feedbackActionRow}>
+              <TouchableOpacity
+                onPress={() => {
+                  setFeedbackModalMessageId(null);
+                  showToast('Feedback recorded');
+                }}
+                disabled={isSubmittingDetails}
+                style={[styles.feedbackCancelBtn, { borderColor: theme.colors.glassBorder }]}
+                accessibilityRole="button"
+              >
+                <BodyText weight="500" style={{ color: theme.colors.textSecondary }}>
+                  Skip
+                </BodyText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={async () => {
+                  if (!feedbackModalMessageId) return;
+                  setIsSubmittingDetails(true);
+                  try {
+                    await submitFeedbackMutation.mutateAsync({
+                      message_id: feedbackModalMessageId,
+                      rating: -1,
+                      feedback_type: 'thumbs_down',
+                      category: selectedCategory,
+                      comment: feedbackComment.trim() || undefined,
+                    });
+                    setFeedbackModalMessageId(null);
+                    showToast('Thanks for helping improve LifeOS!');
+                  } catch {
+                    showToast('Failed to save feedback details');
+                  } finally {
+                    setIsSubmittingDetails(false);
+                  }
+                }}
+                disabled={isSubmittingDetails}
+                style={[
+                  styles.feedbackSubmitBtn,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+                accessibilityRole="button"
+              >
+                {isSubmittingDetails ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <BodyText weight="600" style={{ color: '#FFFFFF' }}>
+                    Submit
+                  </BodyText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </GlassCard>
+        </View>
+      </Modal>
+
       {/* Delete Thread Confirmation */}
       <ConfirmationModal
         visible={!!convToDelete}
@@ -973,5 +1132,55 @@ const styles = StyleSheet.create({
   feedbackBtn: {
     padding: 4,
     borderRadius: 6,
+  },
+  feedbackDetailCard: {
+    width: '100%',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  categoryChipGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 14,
+  },
+  categoryChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  feedbackCommentInput: {
+    height: 80,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    textAlignVertical: 'top',
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  feedbackActionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    alignItems: 'center',
+  },
+  feedbackCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  feedbackSubmitBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

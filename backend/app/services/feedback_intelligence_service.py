@@ -28,7 +28,7 @@ class FeedbackIntelligenceService:
         positive_count = query.filter(AIFeedback.rating == 1).count()
         negative_count = query.filter(AIFeedback.rating == -1).count()
 
-        satisfaction_percentage = round((positive_count / total_count * 100.0), 1) if total_count > 0 else 100.0
+        satisfaction_percentage = round((positive_count / total_count * 100.0), 1) if total_count > 0 else None
 
         # Frequency of negative feedback categories
         category_rows = (

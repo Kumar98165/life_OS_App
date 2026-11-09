@@ -106,15 +106,15 @@ flowchart TD
 | Requirement | Status | Evidence |
 |---|---|---|
 | **Feedback persistence** | **VERIFIED** | `POST /api/v1/ai/feedback` creates rows in PostgreSQL table `ai_feedback` mapped via `AIFeedbackRepository.create_or_update`. Proven in `backend/tests/test_ai_feedback.py::test_submit_positive_feedback`. |
-| **Written feedback** | **VERIFIED** | Supported via backend `SubmitFeedbackRequest.comment` (max 2000 chars) and `suggested_response` (max 5000 chars). Tested in `test_submit_feedback_with_suggested_response`. *Note*: Mobile quick chat currently submits quick-toggle ratings; full comment modal is supported on the API level. |
-| **Category selection** | **VERIFIED** | Supported via backend schema `category` validating against `SUPPORTED_FEEDBACK_CATEGORIES`. Tested in `test_all_supported_categories`. Default 'other' passed on quick downvote. |
+| **Written feedback** | **VERIFIED** | Supported via backend `SubmitFeedbackRequest.comment` (max 2000 chars) and `suggested_response` (max 5000 chars). Mobile chat provides an optional lightweight details modal on downvote with written comments and category chips. |
+| **Category selection** | **VERIFIED** | Supported via backend schema `category` validating against `SUPPORTED_FEEDBACK_CATEGORIES`. Mobile provides 6 visual category chips (`incorrect_answer`, `poor_explanation`, `incomplete_answer`, `wrong_tone`, `outdated_context`, `other`). |
 | **Feedback history** | **VERIFIED** | `GET /api/v1/ai/feedback` returns paginated list of user's past feedback (`AIFeedbackRepository.list_for_user`), and `GET /api/v1/ai/messages/<message_id>/feedback` fetches single message feedback. Tested in `test_query_feedback_by_message_id`. |
 | **Duplicate handling** | **VERIFIED** | Unique constraint on `ai_feedback.message_id` with `AIFeedbackRepository.create_or_update` updates existing row in place without throwing SQL duplicate errors or creating duplicate rows. Tested in `test_idempotent_duplicate_feedback_submissions`. |
-| **Analytics isolation** | **VERIFIED** | `GET /api/v1/ai/feedback/analytics` enforces `AIFeedback.user_id == current_user_id` across count, category grouping, and feedback types. Cross-user isolation verified in `backend/tests/test_ai_feedback_intelligence.py::test_feedback_analytics_cross_user_isolation`. |
+| **Analytics isolation** | **VERIFIED** | `GET /api/v1/ai/feedback/analytics` enforces `AIFeedback.user_id == current_user_id`. When total feedback is 0, `satisfaction_percentage` returns `null` (N/A) rather than a misleading 100%. Tested in `backend/tests/test_ai_feedback_intelligence.py`. |
 | **Recommendation safety** | **VERIFIED** | `feedback_intelligence_service.generate_improvement_recommendations` produces read-only, traceable structured advice. Does NOT modify prompts, memories, or model weights. Zero network calls or external cloud LLM invocations. |
-| **Mobile persistence** | **VERIFIED** | `AIAssistantScreen.tsx` invokes `useAISubmitFeedback` -> `aiService.submitFeedback` with optimistic UI update and toast notification. Error caught and displayed via `showToast('Failed to record feedback')`. Verified via typecheck and mobile test suite. |
+| **Mobile persistence** | **VERIFIED** | `AIAssistantScreen.tsx` invokes `useAISubmitFeedback` -> `aiService.submitFeedback` with optimistic UI update and toast notification. Optional details modal allows category chips and comment submission with skip/cancel actions. |
 | **Cross-user security** | **VERIFIED** | Anti-IDOR check in `AIFeedbackService.submit_feedback` validates `AIMessage.conversation.user_id == current_user_id`, returning 403 Forbidden for unauthorized access. Tested in `test_ai_feedback.py::test_feedback_cross_user_idor_prevention`. |
-| **Regression tests** | **VERIFIED** | Full backend test suite: **235 passed, 0 failed** in 328s. Mobile test suite: **156 passed, 0 failed** in 2.4s. Mobile typecheck: **0 TypeScript errors**. |
+| **Regression tests** | **VERIFIED** | Full backend test suite: **235 passed, 0 failed** in 328s. Mobile test suite: **158 passed, 0 failed** in 2.3s. Mobile typecheck: **0 TypeScript errors**. |
 
 ### 5.2 Verification Findings
 

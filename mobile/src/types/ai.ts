@@ -123,7 +123,7 @@ export interface FeedbackAnalytics {
   total_feedback_count: number;
   positive_count: number;
   negative_count: number;
-  satisfaction_percentage: number;
+  satisfaction_percentage: number | null;
   negative_categories: Record<string, number>;
   feedback_types: Record<string, number>;
   improvement_recommendations: FeedbackImprovementRecommendation[];
