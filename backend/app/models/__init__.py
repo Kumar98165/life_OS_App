@@ -7,7 +7,17 @@ from app.models.goal import Goal, GoalMilestone
 from app.models.habit import Habit, HabitLog
 from app.models.planner import PlannerBlock
 from app.models.note import Note, NoteTag, note_tag_association
-from app.models.ai import AIConversation, AIMessage, AIMemory
+from app.models.ai import (
+    AIConversation,
+    AIMessage,
+    AIMemory,
+    AIPromptVersion,
+    AIFeedback,
+    AITrainingSample,
+    AIDatasetVersion,
+    AIEvaluationRun,
+    AIEvaluationMetric,
+)
 from app.models.finance import (
     FinancialAccount,
     FinancialCategory,
@@ -57,6 +67,12 @@ __all__ = [
     "AIConversation",
     "AIMessage",
     "AIMemory",
+    "AIPromptVersion",
+    "AIFeedback",
+    "AITrainingSample",
+    "AIDatasetVersion",
+    "AIEvaluationRun",
+    "AIEvaluationMetric",
     "FinancialAccount",
     "FinancialCategory",
     "FinancialTransaction",

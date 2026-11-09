@@ -88,6 +88,14 @@ class AIFeedbackService:
             suggested_response=suggested_response
         )
 
+        # 6. Pipeline: check user consent and collect eligible training sample if consented
+        try:
+            from app.services.ai_dataset_service import AIDatasetService
+            dataset_svc = AIDatasetService()
+            dataset_svc.collect_from_feedback(user_id=user_id, feedback_id=feedback.id)
+        except Exception:
+            pass  # Non-blocking collection hook
+
         return feedback, was_created
 
     def get_feedback_by_id(self, feedback_id: str, current_user_id: str) -> AIFeedback:
