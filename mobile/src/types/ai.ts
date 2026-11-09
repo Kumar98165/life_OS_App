@@ -7,6 +7,7 @@ export interface AIMessage {
   content: string;
   tool_calls?: Record<string, any> | null;
   tokens_used?: number | null;
+  latency_ms?: number | null;
   created_at: string;
 }
 

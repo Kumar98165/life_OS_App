@@ -3,7 +3,7 @@
 Endpoints for chat interactions, conversation management,
 and local Ollama health monitoring.
 """
-from flask import Blueprint, request
+from flask import Blueprint, request, Response, stream_with_context
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.schemas.ai import ChatRequest, CreateConversationRequest
 from app.services.ai_service import AIService
@@ -52,6 +52,30 @@ def send_chat_message():
         message="AI response generated successfully",
         status_code=200
     )
+
+
+@ai_bp.route("/chat/stream", methods=["POST"])
+@jwt_required()
+def send_chat_message_stream():
+    """Send a prompt to the AI Assistant and receive progressive token stream via SSE."""
+    user_id = get_jwt_identity()
+    json_data = request.get_json(silent=True) or {}
+    validated = ChatRequest(**json_data)
+
+    generator = ai_service.chat_stream(
+        user_id=user_id,
+        message=validated.message,
+        conversation_id=validated.conversation_id
+    )
+
+    response = Response(
+        stream_with_context(generator),
+        mimetype="text/event-stream"
+    )
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["X-Accel-Buffering"] = "no"
+    response.headers["Connection"] = "keep-alive"
+    return response
 
 
 # ---------------------------------------------------------

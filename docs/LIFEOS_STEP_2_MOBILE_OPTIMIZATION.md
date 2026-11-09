@@ -90,3 +90,4 @@ Before introducing optimizations, the mobile client was inspected across compone
 
 1. **Physical 2 GB RAM Device Testing**: Emulator or physical Android testing on low-tier SoC (e.g. MediaTek Helio G35 / Snapdragon 450) should be conducted before final production release.
 2. **Streaming AI Responses**: Implement Server-Sent Events (SSE) in STEP 3/4 to eliminate the 26s waiting state and stream words progressively.
+

@@ -20,6 +20,8 @@ import {
   useAIDeleteConversation,
   useAIHealth,
 } from '../../hooks/useAI';
+import { aiService } from '../../services/aiService';
+import { useQueryClient } from '@tanstack/react-query';
 import { AIMessage } from '../../types/ai';
 import {
   SafeAreaContainer,
@@ -52,6 +54,12 @@ export const AIAssistantScreen: React.FC = () => {
   const [convToDelete, setConvToDelete] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Progressive streaming state
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const queryClient = useQueryClient();
+
   const scrollViewRef = useRef<any>(null);
 
   // Queries & Mutations
@@ -72,12 +80,21 @@ export const AIAssistantScreen: React.FC = () => {
     }
   }, [historyData, activeConversationId]);
 
-  // Auto scroll to bottom when messages update
+  // Cleanup abort controller on screen unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Auto scroll to bottom when messages or streaming update
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [localMessages, sendMessageMutation.isPending]);
+    }, 50);
+  }, [localMessages, isStreaming, streamingContent, sendMessageMutation.isPending]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -88,9 +105,30 @@ export const AIAssistantScreen: React.FC = () => {
     return conversations.find((c) => c.id === activeConversationId);
   }, [conversations, activeConversationId]);
 
+  const handleCancelStreaming = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+    if (streamingContent.trim()) {
+      // Retain partial response if cancelled mid-stream
+      const partialMsg: AIMessage = {
+        id: `partial-${Date.now()}`,
+        conversation_id: activeConversationId || '',
+        role: 'assistant',
+        content: `${streamingContent} *(generation stopped)*`,
+        created_at: new Date().toISOString(),
+      };
+      setLocalMessages((prev) => [...prev, partialMsg]);
+    }
+    setStreamingContent('');
+    showToast('Generation stopped');
+  };
+
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
-    if (!text || sendMessageMutation.isPending) return;
+    if (!text || isStreaming || sendMessageMutation.isPending) return;
 
     setInputText('');
 
@@ -104,24 +142,58 @@ export const AIAssistantScreen: React.FC = () => {
     };
     setLocalMessages((prev) => [...prev, tempUserMsg]);
 
-    try {
-      const response = await sendMessageMutation.mutateAsync({
-        message: text,
-        conversationId: activeConversationId || undefined,
-      });
+    // Setup streaming controller
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    setIsStreaming(true);
+    setStreamingContent('');
 
-      if (!activeConversationId && response.conversation_id) {
-        setActiveConversationId(response.conversation_id);
-      }
+    let currentConversationId = activeConversationId;
+    let accumulatedText = '';
 
-      setLocalMessages((prev) => [
-        ...prev.filter((m) => m.id !== tempUserMsg.id),
-        response.user_message,
-        response.assistant_message,
-      ]);
-    } catch (err: any) {
-      showToast(err.message || 'Failed to get response from local AI.');
-    }
+    await aiService.streamChatMessage(
+      text,
+      activeConversationId || undefined,
+      {
+        onStart: (data) => {
+          if (!activeConversationId && data.conversation_id) {
+            currentConversationId = data.conversation_id;
+            setActiveConversationId(data.conversation_id);
+          }
+        },
+        onToken: (chunk) => {
+          accumulatedText += chunk;
+          setStreamingContent(accumulatedText);
+        },
+        onComplete: (data) => {
+          setIsStreaming(false);
+          const finalAssistantMsg: AIMessage = {
+            id: data.message_id || `msg-${Date.now()}`,
+            conversation_id: data.conversation_id || currentConversationId || '',
+            role: 'assistant',
+            content: accumulatedText,
+            latency_ms: data.latency_ms,
+            created_at: new Date().toISOString(),
+          };
+          setLocalMessages((prev) => [...prev, finalAssistantMsg]);
+          setStreamingContent('');
+          abortControllerRef.current = null;
+          queryClient.invalidateQueries({ queryKey: ['ai_conversations'] });
+          if (data.conversation_id) {
+            queryClient.invalidateQueries({
+              queryKey: ['ai_conversation_history', data.conversation_id],
+            });
+          }
+        },
+        onError: (err) => {
+          setIsStreaming(false);
+          setStreamingContent('');
+          abortControllerRef.current = null;
+          showToast(err.message || 'Stream connection failed.');
+        },
+      },
+      controller.signal
+    );
   };
 
   const handleStartNewChat = () => {
@@ -346,8 +418,68 @@ export const AIAssistantScreen: React.FC = () => {
                 );
               })}
 
-              {/* Generating / Typing Indicator */}
-              {sendMessageMutation.isPending && (
+              {/* Progressive Streaming Bubble */}
+              {isStreaming && (
+                <View style={[styles.messageRow, styles.assistantMessageRow]}>
+                  <View
+                    style={[
+                      styles.avatarCircle,
+                      { backgroundColor: `${theme.colors.primary}20` },
+                    ]}
+                  >
+                    <Ionicons name="sparkles" size={14} color={theme.colors.primary} />
+                  </View>
+                  <View
+                    style={[
+                      styles.messageBubble,
+                      styles.assistantBubble,
+                      {
+                        backgroundColor: theme.colors.glassBackgroundSolid,
+                        borderColor: theme.colors.glassBorder,
+                      },
+                      theme.shadows.subtle,
+                    ]}
+                  >
+                    {streamingContent ? (
+                      <BodyText style={{ color: theme.colors.textPrimary, lineHeight: 22 }}>
+                        {streamingContent}
+                        <Caption style={{ color: theme.colors.primary, fontWeight: '700' }}> ▍</Caption>
+                      </BodyText>
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 4 }}>
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                        <Caption color="secondary" style={{ marginLeft: 8 }}>
+                          Connecting to local AI...
+                        </Caption>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      onPress={handleCancelStreaming}
+                      style={{
+                        marginTop: 8,
+                        alignSelf: 'flex-start',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        backgroundColor: `${theme.colors.error}15`,
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Stop generating response"
+                    >
+                      <Ionicons name="stop-circle-outline" size={14} color={theme.colors.error} />
+                      <Caption style={{ color: theme.colors.error, marginLeft: 4, fontWeight: '600' }}>
+                        Stop generating
+                      </Caption>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Generating / Typing Indicator for fallback synchronous mutation */}
+              {!isStreaming && sendMessageMutation.isPending && (
                 <View style={[styles.messageRow, styles.assistantMessageRow]}>
                   <View
                     style={[

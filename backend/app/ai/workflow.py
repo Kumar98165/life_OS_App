@@ -99,33 +99,7 @@ def node_classify_intent(state: LifeOSAgentState) -> Dict[str, Any]:
 def node_generate_response(state: LifeOSAgentState) -> Dict[str, Any]:
     """Execute local Ollama model with injected context and conversation history."""
     try:
-        template = state.get("prompt_template") or SYSTEM_PROMPT_TEMPLATE
-        context_block = state.get("formatted_context", "")
-        memory_block = state.get("formatted_memories", "")
-
-        try:
-            system_text = template.format(
-                context_block=context_block,
-                memory_block=memory_block
-            )
-        except (KeyError, IndexError, ValueError):
-            system_text = (
-                template
-                .replace("{context_block}", context_block)
-                .replace("{memory_block}", memory_block)
-            )
-
-        messages: List[BaseMessage] = [SystemMessage(content=system_text)]
-
-        # Append recent conversation history (capped to last 8 messages)
-        history = state.get("history", [])
-        if history:
-            messages.extend(history[-8:])
-
-        # Append current user prompt wrapped in boundary delimiter to prevent prompt injection
-        user_msg = state["user_message"]
-        messages.append(HumanMessage(content=f"<user_input>\n{user_msg}\n</user_input>"))
-
+        messages = prepare_llm_messages(state)
         llm = get_llm()
         result = llm.invoke(messages)
         content = result.content if hasattr(result, "content") else str(result)
@@ -158,6 +132,37 @@ def node_validate_response(state: LifeOSAgentState) -> Dict[str, Any]:
     resp = re.sub(r"</?user_input>", "", resp).strip() or resp
 
     return {"response": resp}
+
+
+def prepare_llm_messages(state: LifeOSAgentState) -> List[BaseMessage]:
+    """Helper to construct context-grounded messages for LLM invocation or streaming."""
+    template = state.get("prompt_template") or SYSTEM_PROMPT_TEMPLATE
+    context_block = state.get("formatted_context", "")
+    memory_block = state.get("formatted_memories", "")
+
+    try:
+        system_text = template.format(
+            context_block=context_block,
+            memory_block=memory_block
+        )
+    except (KeyError, IndexError, ValueError):
+        system_text = (
+            template
+            .replace("{context_block}", context_block)
+            .replace("{memory_block}", memory_block)
+        )
+
+    messages: List[BaseMessage] = [SystemMessage(content=system_text)]
+
+    # Append recent conversation history (capped to last 8 messages)
+    history = state.get("history", [])
+    if history:
+        messages.extend(history[-8:])
+
+    # Append current user prompt wrapped in boundary delimiter to prevent prompt injection
+    user_msg = state["user_message"]
+    messages.append(HumanMessage(content=f"<user_input>\n{user_msg}\n</user_input>"))
+    return messages
 
 
 def build_lifeos_agent_graph():

@@ -198,3 +198,173 @@ class AIService:
             "memories_extracted": memories_extracted,
         }
 
+    def chat_stream(
+        self,
+        user_id: str,
+        message: str,
+        conversation_id: Optional[str] = None
+    ):
+        """Process chat message and yield Server-Sent Events (SSE) while streaming tokens."""
+        import json
+        import time
+        from app.ai.workflow import (
+            node_retrieve_context,
+            node_retrieve_memories,
+            node_classify_intent,
+            prepare_llm_messages,
+            node_validate_response
+        )
+        from app.ai.config import get_llm
+        from app.services.ai_prompt_service import AIPromptService
+        from app.extensions import db
+
+        cleaned_msg = message.strip()
+        if not cleaned_msg:
+            yield f"event: error\ndata: {json.dumps({'code': 'INVALID_REQUEST', 'message': 'Message cannot be empty'})}\n\n"
+            return
+
+        # 1. Resolve or create conversation
+        try:
+            is_new_thread = False
+            if conversation_id:
+                existing = self.ai_repo.get_by_id(conversation_id)
+                if not existing:
+                    yield f"event: error\ndata: {json.dumps({'code': 'NOT_FOUND', 'message': 'Conversation not found'})}\n\n"
+                    return
+                check_resource_ownership(existing.user_id, user_id)
+                conv = existing
+            else:
+                conv = self.create_conversation(user_id)
+                is_new_thread = True
+
+            # 2. Persist user turn
+            user_msg = self.ai_repo.add_message(
+                conversation_id=conv.id,
+                role="user",
+                content=cleaned_msg
+            )
+
+            # 3. Load historical messages
+            history_msgs = self.ai_repo.get_messages(conv.id, limit=8)
+            prior_msgs = [m for m in history_msgs if m.id != user_msg.id]
+            lc_history = []
+            for m in prior_msgs:
+                if m.role == "user":
+                    lc_history.append(HumanMessage(content=m.content))
+                elif m.role == "assistant":
+                    lc_history.append(LcAIMessage(content=m.content))
+
+            # 4. Resolve active prompt version
+            prompt_service = AIPromptService()
+            active_prompt = prompt_service.get_active_prompt_or_initialize()
+            prompt_version_id = active_prompt.id if active_prompt else None
+            prompt_template = active_prompt.prompt_template if active_prompt else None
+
+            # Commit user turn to release active write lock before long inference
+            db.session.commit()
+
+        except Exception as setup_err:
+            db.session.rollback()
+            yield f"event: error\ndata: {json.dumps({'code': 'SETUP_ERROR', 'message': str(setup_err)})}\n\n"
+            return
+
+        # 5. Emit 'start' event with conversation metadata
+        yield f"event: start\ndata: {json.dumps({'conversation_id': conv.id, 'conversation_title': conv.title})}\n\n"
+
+        # 6. Execute LangGraph pre-inference nodes
+        try:
+            state = {
+                "user_id": user_id,
+                "user_message": cleaned_msg,
+                "conversation_id": conv.id,
+                "history": lc_history,
+                "context_data": {},
+                "formatted_context": "",
+                "retrieved_memories": [],
+                "formatted_memories": "",
+                "memories_used": [],
+                "intent": "",
+                "response": "",
+                "error": None,
+                "prompt_template": prompt_template,
+                "prompt_version_id": prompt_version_id,
+            }
+
+            ctx_res = node_retrieve_context(state)
+            state.update(ctx_res)
+
+            mem_res = node_retrieve_memories(state)
+            state.update(mem_res)
+
+            intent_res = node_classify_intent(state)
+            state.update(intent_res)
+
+            # Construct messages
+            llm_messages = prepare_llm_messages(state)
+            llm = get_llm()
+
+        except Exception as prep_err:
+            yield f"event: error\ndata: {json.dumps({'code': 'PREPARATION_ERROR', 'message': str(prep_err)})}\n\n"
+            return
+
+        # 7. Stream LLM tokens directly from Ollama
+        accumulated_chunks = []
+        start_t = time.perf_counter()
+
+        try:
+            for chunk in llm.stream(llm_messages):
+                token_text = chunk.content if hasattr(chunk, "content") else str(chunk)
+                if token_text:
+                    accumulated_chunks.append(token_text)
+                    yield f"event: token\ndata: {json.dumps({'content': token_text})}\n\n"
+
+        except Exception as stream_err:
+            yield f"event: error\ndata: {json.dumps({'code': 'STREAM_ERROR', 'message': str(stream_err)})}\n\n"
+            return
+
+        total_latency_ms = int((time.perf_counter() - start_t) * 1000)
+        raw_full_response = "".join(accumulated_chunks)
+
+        # 8. Post-process & sanitize complete response
+        state["response"] = raw_full_response
+        validated_result = node_validate_response(state)
+        final_clean_response = validated_result.get("response", raw_full_response)
+
+        # 9. Persist completed assistant response
+        try:
+            assistant_msg = self.ai_repo.add_message(
+                conversation_id=conv.id,
+                role="assistant",
+                content=final_clean_response,
+                prompt_version_id=prompt_version_id,
+                latency_ms=total_latency_ms
+            )
+
+            if is_new_thread or conv.title in ["New Conversation", "New Chat"]:
+                new_title = _generate_title_from_query(cleaned_msg)
+                self.ai_repo.update_title(conv, new_title)
+
+            # Background memory extraction
+            try:
+                from app.services.ai_memory_service import AIMemoryService
+                mem_svc = AIMemoryService()
+                mem_svc.extract_and_store_candidates(
+                    user_id=user_id,
+                    user_message=cleaned_msg,
+                    assistant_response=final_clean_response,
+                    source_conversation_id=conv.id,
+                    source_message_id=user_msg.id
+                )
+            except Exception:
+                pass
+
+            db.session.commit()
+
+            # 10. Emit 'complete' event
+            yield f"event: complete\ndata: {json.dumps({'message_id': assistant_msg.id, 'conversation_id': conv.id, 'latency_ms': total_latency_ms})}\n\n"
+
+        except Exception as save_err:
+            db.session.rollback()
+            yield f"event: error\ndata: {json.dumps({'code': 'PERSISTENCE_ERROR', 'message': str(save_err)})}\n\n"
+
+
