@@ -37,9 +37,12 @@ class AIRuntimeConfig:
             # Fallback gracefully if database or table is unavailable during initialization
             pass
 
-        if current_app:
-            return current_app.config.get("OLLAMA_MODEL", "qwen2.5:3b")
-        return os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
+        env_model = os.getenv("OLLAMA_MODEL")
+        if env_model:
+            return env_model
+        if current_app and current_app.config.get("OLLAMA_MODEL"):
+            return current_app.config["OLLAMA_MODEL"]
+        return "qwen2.5:3b"
 
 
 def get_ai_config() -> Dict[str, Any]:

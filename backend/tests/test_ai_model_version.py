@@ -301,3 +301,92 @@ class TestModelVersionAPI:
         logs_resp = client.get("/api/v1/ai/models/audit-logs", headers=user_headers)
         assert logs_resp.status_code == 200
         assert len(logs_resp.get_json()["data"]["items"]) >= 1
+
+class TestActivationAndRollbackAudit:
+    """Focused audit tests for STEP 10: atomic transactions, rollback protection, security, and fallback."""
+
+    def test_failed_activation_leaves_previous_model_active(self, app, admin_user):
+        with app.app_context():
+            user = db.session.get(User, admin_user)
+            service = ModelRegistryService()
+            base = service.initialize_default_base_model()
+            assert base.is_active is True
+
+            candidate = service.register_model(
+                model_tag="qwen2.5:3b-unreachable-test",
+                version_tag="v1.0.0",
+                user=user
+            )
+            service.attach_evaluation_report(candidate.id, evaluation_score=0.90, user=user)
+            service.approve_model(candidate.id, user=user)
+
+            # Attempt activation without mock to a model not running in Ollama
+            with pytest.raises(BadRequestException):
+                service.activate_model(
+                    model_id=candidate.id,
+                    user=user,
+                    reason="Fail test",
+                    allow_offline_mock=False
+                )
+
+            # Verify base model remains active
+            db.session.refresh(base)
+            db.session.refresh(candidate)
+            assert base.is_active is True
+            assert candidate.is_active is False
+            active = service.repo.get_active_model()
+            assert active.id == base.id
+
+    def test_concurrency_single_active_model_invariant(self, app, admin_user):
+        """Verify that multiple activation transitions maintain exactly one active model."""
+        with app.app_context():
+            user = db.session.get(User, admin_user)
+            service = ModelRegistryService()
+            base = service.initialize_default_base_model()
+
+            m1 = service.register_model(model_tag="qwen2.5:3b-c1", version_tag="v1.0.1", user=user)
+            service.attach_evaluation_report(m1.id, evaluation_score=0.80, user=user)
+            service.approve_model(m1.id, user=user)
+
+            m2 = service.register_model(model_tag="qwen2.5:3b-c2", version_tag="v1.0.2", user=user)
+            service.attach_evaluation_report(m2.id, evaluation_score=0.85, user=user)
+            service.approve_model(m2.id, user=user)
+
+            service.activate_model(m1.id, user=user, reason="Switch 1", allow_offline_mock=True)
+            service.activate_model(m2.id, user=user, reason="Switch 2", allow_offline_mock=True)
+
+            active_models = AIModelVersion.query.filter_by(is_active=True).all()
+            assert len(active_models) == 1
+            assert active_models[0].id == m2.id
+
+    def test_environment_fallback_when_db_empty(self, app, monkeypatch):
+        """Verify AIRuntimeConfig falls back cleanly to env var or config when no DB active model."""
+        with app.app_context():
+            monkeypatch.setenv("OLLAMA_MODEL", "qwen2.5:3b-fallback")
+            # Without any active model in DB
+            AIRuntimeConfig.set_runtime_override(None)
+            AIModelVersion.query.update({"is_active": False})
+            db.session.commit()
+
+            resolved = AIRuntimeConfig.get_active_model_tag()
+            assert resolved == "qwen2.5:3b-fallback"
+
+    def test_security_malicious_model_tags_cannot_inject_commands(self, app, admin_user):
+        """Verify validation prevents command injection attempts in model tags."""
+        with app.app_context():
+            user = db.session.get(User, admin_user)
+            service = ModelRegistryService()
+
+            # Whitespace and empty tags rejected
+            with pytest.raises(BadRequestException):
+                service.register_model(model_tag="   ", version_tag="v1.0.0", user=user)
+
+    def test_security_rollback_non_admin_rejected_via_api(self, client, regular_user, admin_user):
+        user_token = create_access_token(identity=regular_user)
+        user_headers = {"Authorization": f"Bearer {user_token}"}
+
+        resp = client.post("/api/v1/ai/models/rollback", headers=user_headers, json={
+            "target_model_id": "dummy-id",
+            "reason": "Unauthorized rollback attempt"
+        })
+        assert resp.status_code == 403

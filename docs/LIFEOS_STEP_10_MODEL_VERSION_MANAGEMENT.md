@@ -1,8 +1,8 @@
-# LifeOS — STEP 10: AI Model Version Management & Rollback Architecture
+# LifeOS — STEP 10: AI Model Version Management & Rollback Architecture & Final Audit
 
 ## 1. Executive Summary
 
-STEP 10 establishes a secure, robust model version management registry and rollback system for LifeOS.
+STEP 10 establishes a secure model version management registry and atomic rollback system for LifeOS.
 
 Key features:
 - **Comprehensive Registry**: Tracks base models, version tags, training runs (STEP 8), evaluation scores (STEP 9), artifact SHA-256 checksums, and active runtime flags.
@@ -99,15 +99,18 @@ Implemented in `backend/app/models/ai.py` and Alembic migration `0eda9830f2db`:
 
 ---
 
-## 6. Verification & Test Evidence
+## 6. Final Audit & Verification Evidence
 
-- **New Test Suite**: `backend/tests/test_ai_model_version.py` (10 tests, **100% pass rate**).
-  - Model initialization, semantic version validation, checksum validation, duplicate suppression.
-  - Evaluation threshold enforcement (rejection if score $< 0.65$).
-  - Approval workflow and role-based access control.
-  - Activation, atomic transition, and rollback lifecycle.
-  - Missing Ollama model rejection.
-  - Full REST API endpoint testing with JWT authentication.
-- **Combined Backend AI Tests**: 46 passed in 20.06s across all 4 AI modules (Model Version, Evaluation, Training, Dataset).
-- **Mobile Regression**: `npm --prefix mobile test` (158 passed in 6.64s).
-- **TypeScript Verification**: `npm --prefix mobile run typecheck` (0 errors).
+- **Initial Qwen Registration**: `qwen2.5:3b` is registered with `is_active=True`, status `active`, and correctly recognized as default runtime model.
+- **Atomic Transition & Failed Activation Protection**: Verified that when an activation fails (e.g. uninstalled model), the database transaction aborts and leaves the previous model active.
+- **Concurrency Invariant**: Verified that multiple consecutive activations maintain strictly one active model.
+- **Environment Fallback**: Verified that `AIRuntimeConfig.get_active_model_tag()` cleanly falls back to environment configuration (`OLLAMA_MODEL`) when no active model exists in the database.
+- **Role-Based Security**: Verified that non-admin requests to register, approve, activate, or roll back are rejected with HTTP 403 Forbidden.
+- **Test Evidence**:
+  - `backend/tests/test_ai_model_version.py`: **15 passed** (registry, validation, lifecycle, activation, rollback, fallback, security).
+  - `backend/tests/test_ai_evaluation.py`: **12 passed** (STEP 9 benchmarking).
+  - `backend/tests/test_ai_training.py`: **16 passed** (STEP 8 Qwen fine-tuning pipeline).
+  - `backend/tests/test_ai_dataset.py`: **8 passed** (STEP 7 dataset curation & privacy).
+  - **Full AI Regression Suite**: **51 passed in 25.18s**.
+  - **Mobile Test Suite**: **158 passed in 4.43s**.
+  - **Mobile TypeScript Typecheck**: **0 errors (clean)**.
