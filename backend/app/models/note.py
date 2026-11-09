@@ -1,5 +1,6 @@
 from sqlalchemy import Table, Column, String, Text, Boolean, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import Optional, List
 from app.models.base import BaseModel
 from app.extensions import db
 
@@ -83,9 +84,17 @@ class Note(BaseModel):
         default=False,
         nullable=False
     )
+    folder_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("note_folders.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="notes")
+    folder: Mapped[Optional["NoteFolder"]] = relationship("NoteFolder", back_populates="notes")
+    attachments: Mapped[list["NoteAttachment"]] = relationship("NoteAttachment", back_populates="note", cascade="all, delete-orphan")
     tags: Mapped[list[NoteTag]] = relationship(
         "NoteTag",
         secondary=note_tag_association,
@@ -105,6 +114,9 @@ class Note(BaseModel):
             "content": self.content,
             "is_pinned": self.is_pinned,
             "is_archived": self.is_archived,
+            "folder_id": self.folder_id,
+            "folder": self.folder.to_dict() if self.folder else None,
+            "attachments": [a.to_dict() for a in self.attachments] if self.attachments else [],
             "tags": [t.to_dict() for t in self.tags] if self.tags else [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

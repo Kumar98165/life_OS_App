@@ -31,6 +31,23 @@ from app.models.automation import (
 )
 from app.models.personalization import UserPersonalization, DailyRoutine, DEFAULT_DASHBOARD_WIDGETS
 from app.models.activity_log import ActivityLog
+from app.models.extensions import (
+    NoteFolder,
+    NoteAttachment,
+    Contact,
+    ContactInteraction,
+    Subscription,
+    LearningGoal,
+    StudySession,
+    Trip,
+    TripItineraryItem,
+    TripPackingItem,
+    Workout,
+    PersonalAsset,
+    AssetMaintenanceRecord,
+    Bill,
+    BillPayment,
+)
 
 __all__ = [
     "BaseModel",
@@ -51,6 +68,21 @@ __all__ = [
     "Note",
     "NoteTag",
     "note_tag_association",
+    "NoteFolder",
+    "NoteAttachment",
+    "Contact",
+    "ContactInteraction",
+    "Subscription",
+    "LearningGoal",
+    "StudySession",
+    "Trip",
+    "TripItineraryItem",
+    "TripPackingItem",
+    "Workout",
+    "PersonalAsset",
+    "AssetMaintenanceRecord",
+    "Bill",
+    "BillPayment",
     "FinancialAccount",
     "FinancialCategory",
     "FinancialTransaction",

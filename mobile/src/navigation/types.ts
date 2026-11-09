@@ -46,6 +46,14 @@ export type RootStackParamList = {
   PersonalizationSettings: undefined;
   DashboardCustomization: undefined;
   DailyRoutine: undefined;
+  Notes: undefined;
+  Contacts: undefined;
+  Subscriptions: undefined;
+  Learning: undefined;
+  Travel: undefined;
+  Fitness: undefined;
+  Assets: undefined;
+  Bills: undefined;
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;

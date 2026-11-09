@@ -7,4 +7,5 @@ export * from './ActiveGoalsSection';
 export * from './HabitSummarySection';
 export * from './FinanceQuickCard';
 export * from './AnalyticsQuickCard';
+export * from './ProductivityModuleHub';
 

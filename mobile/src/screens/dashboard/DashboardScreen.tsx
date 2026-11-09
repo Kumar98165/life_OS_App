@@ -19,6 +19,7 @@ import {
   HabitSummarySection,
   FinanceQuickCard,
   AnalyticsQuickCard,
+  ProductivityModuleHub,
   AlertDialog,
   Toast,
 } from '../../components';
@@ -187,6 +188,9 @@ export const DashboardScreen: React.FC = () => {
           onCustomizePress={() => navigation.navigate('DashboardCustomization')}
           hasUnreadNotifications={(unreadCount || 0) > 0}
         />
+
+        {/* Productivity Hub Quick Links */}
+        <ProductivityModuleHub onNavigate={(route) => navigation.navigate(route)} />
 
         {/* Dynamic Personalized Widget List */}
         {sortedWidgetIds.map(renderWidget)}

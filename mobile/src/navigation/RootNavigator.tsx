@@ -34,6 +34,14 @@ import {
   PersonalizationSettingsScreen,
   DashboardCustomizationScreen,
   DailyRoutineScreen,
+  NotesScreen,
+  ContactsScreen,
+  SubscriptionsScreen,
+  LearningScreen,
+  TravelScreen,
+  FitnessScreen,
+  AssetsScreen,
+  BillsScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -201,6 +209,46 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="DailyRoutine"
               component={DailyRoutineScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Notes"
+              component={NotesScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Contacts"
+              component={ContactsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Subscriptions"
+              component={SubscriptionsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Learning"
+              component={LearningScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Travel"
+              component={TravelScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Fitness"
+              component={FitnessScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Assets"
+              component={AssetsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="Bills"
+              component={BillsScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>

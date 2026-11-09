@@ -153,6 +153,56 @@ class User(BaseModel):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    notes: Mapped[List["Note"]] = relationship(
+        "Note",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    note_tags: Mapped[List["NoteTag"]] = relationship(
+        "NoteTag",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    note_folders: Mapped[List["NoteFolder"]] = relationship(
+        "NoteFolder",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    contacts: Mapped[List["Contact"]] = relationship(
+        "Contact",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    subscriptions: Mapped[List["Subscription"]] = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    learning_goals: Mapped[List["LearningGoal"]] = relationship(
+        "LearningGoal",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    trips: Mapped[List["Trip"]] = relationship(
+        "Trip",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    workouts: Mapped[List["Workout"]] = relationship(
+        "Workout",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    personal_assets: Mapped[List["PersonalAsset"]] = relationship(
+        "PersonalAsset",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    bills: Mapped[List["Bill"]] = relationship(
+        "Bill",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("ix_users_email_lower", "email"),
