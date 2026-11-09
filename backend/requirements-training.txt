@@ -1,0 +1,11 @@
+# Optional fine-tuning dependencies for external GPU environments (Colab / RunPod / Lambda / Dedicated Linux GPU)
+# DO NOT INSTALL ON DEVELOPMENT LAPTOP (Intel UHD 620 / 12GB RAM)
+torch>=2.2.0
+transformers>=4.40.0
+datasets>=2.18.0
+peft>=0.10.0
+trl>=0.8.6
+bitsandbytes>=0.43.0
+accelerate>=0.29.0
+scipy>=1.12.0
+
