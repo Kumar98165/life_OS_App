@@ -43,8 +43,6 @@ export type RootStackParamList = {
   AutomationDetail: { id: string };
   AutomationApproval: { approval: any };
   AutomationExecutionHistory: { executionId?: string } | undefined;
-  VoiceAssistant: { conversationId?: string } | undefined;
-  VoiceSettings: undefined;
   PersonalizationSettings: undefined;
   DashboardCustomization: undefined;
   DailyRoutine: undefined;

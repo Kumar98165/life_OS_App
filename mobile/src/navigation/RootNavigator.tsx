@@ -31,8 +31,6 @@ import {
   AutomationDetailScreen,
   AutomationApprovalScreen,
   AutomationExecutionHistoryScreen,
-  VoiceAssistantScreen,
-  VoiceSettingsScreen,
   PersonalizationSettingsScreen,
   DashboardCustomizationScreen,
   DailyRoutineScreen,
@@ -188,16 +186,6 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="AutomationExecutionHistory"
               component={AutomationExecutionHistoryScreen}
-              options={{ animation: 'slide_from_right' }}
-            />
-            <Stack.Screen
-              name="VoiceAssistant"
-              component={VoiceAssistantScreen}
-              options={{ animation: 'slide_from_bottom' }}
-            />
-            <Stack.Screen
-              name="VoiceSettings"
-              component={VoiceSettingsScreen}
               options={{ animation: 'slide_from_right' }}
             />
             <Stack.Screen

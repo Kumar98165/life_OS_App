@@ -8,8 +8,8 @@ import { useUnreadNotificationCount } from '../../hooks/useNotifications';
 import { useDashboardPreferences } from '../../hooks/usePersonalization';
 import { QuickActionType } from '../../components/dashboard/QuickActionsSection';
 import {
-  SafeAreaContainer,
-  ScrollContainer,
+ SafeAreaContainer,
+ ScrollContainer,
   DashboardHeader,
   DailyOverviewCard,
   QuickActionsSection,

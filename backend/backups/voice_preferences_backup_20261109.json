@@ -1,0 +1,15 @@
+[
+  {
+    "user_id": "f37e975c-1272-4576-a0d3-cf4d2f85d9e7",
+    "language": "en",
+    "voice_name": "default",
+    "speech_rate": 1.5,
+    "speech_pitch": 1.0,
+    "auto_play_response": true,
+    "audio_privacy_enabled": true,
+    "confirm_actions_via_voice": true,
+    "id": "65667783-9236-4fd0-aa23-ef9e4c52aa5d",
+    "created_at": "2026-11-08T22:20:48.103350-08:00",
+    "updated_at": "2026-11-09T04:37:03.389571-08:00"
+  }
+]

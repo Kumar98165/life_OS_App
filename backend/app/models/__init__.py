@@ -29,7 +29,6 @@ from app.models.automation import (
     AutomationApproval,
     AutomationExecutionLog,
 )
-from app.models.voice import VoicePreference
 from app.models.personalization import UserPersonalization, DailyRoutine, DEFAULT_DASHBOARD_WIDGETS
 from app.models.activity_log import ActivityLog
 
@@ -42,7 +41,6 @@ __all__ = [
     "UserPersonalization",
     "DailyRoutine",
     "DEFAULT_DASHBOARD_WIDGETS",
-    "VoicePreference",
     "TaskCategory",
     "Task",
     "Goal",

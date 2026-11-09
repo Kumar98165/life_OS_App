@@ -13,7 +13,6 @@ export * from './finance';
 export * from './notifications';
 export * from './analytics';
 export * from './automations';
-export * from './voice';
 export * from './personalization';
 export * from './placeholders/PlaceholderScreens';
 
