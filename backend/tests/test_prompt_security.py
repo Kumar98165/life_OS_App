@@ -12,7 +12,6 @@ from app.services.automation_service import AutomationService
 from app.core.exceptions import BadRequestException, ForbiddenException
 from app.extensions import db
 
-
 def test_sensitive_content_filter_blocks_credentials():
     """Verify that credentials, tokens, and financial secrets are stripped/blocked."""
     assert _is_sensitive_content("My password is SuperSecretPassword123!") is True

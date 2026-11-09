@@ -41,8 +41,12 @@ class PersonalizationService:
                 dashboard_density="comfortable",
                 personalization_enabled=True,
             )
-            db.session.add(record)
-            db.session.commit()
+            try:
+                db.session.add(record)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                record = UserPersonalization.query.filter_by(user_id=user_id).first()
         return record
 
     def get_or_create_routine(self, user_id: str) -> DailyRoutine:
@@ -65,8 +69,12 @@ class PersonalizationService:
                 preferred_planning_time="08:30",
                 routine_reminders_enabled=True,
             )
-            db.session.add(routine)
-            db.session.commit()
+            try:
+                db.session.add(routine)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                routine = DailyRoutine.query.filter_by(user_id=user_id).first()
         return routine
 
     def update_personalization(self, user_id: str, updates: Dict[str, Any]) -> UserPersonalization:
