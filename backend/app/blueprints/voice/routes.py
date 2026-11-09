@@ -2,7 +2,7 @@
 
 Endpoints:
 - POST  /api/v1/voice/transcribe  (Multipart audio file -> STT transcript)
-- POST  /api/v1/voice/assistant   (Multipart audio file OR text -> LangGraph -> response + TTS audio)
+- POST  /api/v1/voice/assistant   (Multipart audio file OR text -> deterministic voice response + TTS audio)
 - POST  /api/v1/voice/synthesize  (JSON text -> audio/wav bytes)
 - GET   /api/v1/voice/voices      (List available local system voices)
 - GET   /api/v1/voice/settings    (Get authenticated user voice preferences)
@@ -81,7 +81,7 @@ def transcribe_audio():
 @voice_bp.route("/assistant", methods=["POST"])
 @jwt_required()
 def voice_assistant_turn():
-    """Execute complete voice assistant turn with local STT, LangGraph Agent, and TTS."""
+    """Execute complete voice assistant turn with local STT and TTS."""
     user_id = get_jwt_identity()
 
     # Supports both multipart/form-data (audio file + form fields) and application/json (text fallback)

@@ -17,7 +17,7 @@ from app.models.automation import (
     AutomationExecutionLog,
 )
 from app.services.automation_service import AutomationService
-from app.ai.automation.tools import automation_tool_registry, ToolDefinition
+from app.automation.tools import automation_tool_registry, ToolDefinition
 
 
 @pytest.fixture
@@ -216,7 +216,7 @@ def test_financial_read_only_tool_enforcement(app, auth_headers):
 # =============================================================================
 
 def test_workflow_execution_and_approval_flow(client, auth_headers):
-    """Test full LangGraph automation run, approval generation, approval execution, and rejection."""
+    """Test full automation run, approval generation, approval execution, and rejection."""
     # 1. Get template ID
     resp = client.get("/api/v1/automations", headers=auth_headers["headers"])
     auto_id = resp.get_json()["data"]["automations"][0]["id"]

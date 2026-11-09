@@ -118,8 +118,7 @@ class PersonalizationService:
         - 'dashboard': Restores default widgets and density
         - 'routine': Restores default routine hours
         - 'identity': Restores default name, regional formats
-        - 'ai_style': Restores default AI response style
-        - 'all': Restores all above without deleting conversations, memories, or accounts
+        - 'all': Restores all above without deleting user accounts or productivity data
         """
         record = self.get_or_create_personalization(user_id)
         routine = self.get_or_create_routine(user_id)
@@ -153,10 +152,6 @@ class PersonalizationService:
             record.week_start_day = "monday"
             record.productivity_style = "structured"
             record.task_priority_strategy = "eisenhower"
-
-        if target in ("ai_style", "all"):
-            record.ai_response_style = "concise"
-            record.ai_response_length = "medium"
 
         db.session.commit()
 

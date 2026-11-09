@@ -230,7 +230,7 @@ export const FinanceDashboardScreen: React.FC = () => {
                   </View>
                   <View style={{ marginLeft: 10 }}>
                     <BodyText weight="bold">Smart Financial Insights</BodyText>
-                    <Caption color={theme.colors.textMuted}>Local Qwen AI Analysis</Caption>
+                    <Caption color={theme.colors.textMuted}>Automated Financial Analysis</Caption>
                   </View>
                 </View>
                 <Ionicons

@@ -8,9 +8,6 @@ import {
   OnboardingScreen,
   SplashScreen,
   HabitsScreen,
-  AIAssistantScreen,
-  AIMemoryScreen,
-  AIImprovementDashboardScreen,
   FinanceDashboardScreen,
   AddTransactionScreen,
   TransactionHistoryScreen,
@@ -36,7 +33,6 @@ import {
   AutomationExecutionHistoryScreen,
   VoiceAssistantScreen,
   VoiceSettingsScreen,
-  VoiceConversationHistoryScreen,
   PersonalizationSettingsScreen,
   DashboardCustomizationScreen,
   DailyRoutineScreen,
@@ -77,21 +73,6 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="Habits"
               component={HabitsScreen}
-              options={{ animation: 'slide_from_right' }}
-            />
-            <Stack.Screen
-              name="AIAssistant"
-              component={AIAssistantScreen}
-              options={{ animation: 'slide_from_bottom' }}
-            />
-            <Stack.Screen
-              name="AIMemory"
-              component={AIMemoryScreen}
-              options={{ animation: 'slide_from_right' }}
-            />
-            <Stack.Screen
-              name="AIImprovementDashboard"
-              component={AIImprovementDashboardScreen}
               options={{ animation: 'slide_from_right' }}
             />
             <Stack.Screen
@@ -217,11 +198,6 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="VoiceSettings"
               component={VoiceSettingsScreen}
-              options={{ animation: 'slide_from_right' }}
-            />
-            <Stack.Screen
-              name="VoiceConversationHistory"
-              component={VoiceConversationHistoryScreen}
               options={{ animation: 'slide_from_right' }}
             />
             <Stack.Screen

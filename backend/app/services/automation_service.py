@@ -20,9 +20,9 @@ from app.models.automation import (
     AutomationExecutionLog
 )
 from app.models.user import User
-from app.ai.automation.templates import AUTOMATION_TEMPLATES
-from app.ai.automation.workflow import lifeos_automation_graph
-from app.ai.automation.tools import automation_tool_registry
+from app.automation.templates import AUTOMATION_TEMPLATES
+from app.automation.workflow import lifeos_automation_graph
+from app.automation.tools import automation_tool_registry
 from app.core.exceptions import (
     NotFoundException,
     BadRequestException,
@@ -172,7 +172,7 @@ class AutomationService:
         user_request: Optional[str] = None,
         idempotency_key: Optional[str] = None
     ) -> AutomationExecution:
-        """Trigger an execution run through the LangGraph workflow."""
+        """Trigger an execution run through the automation workflow."""
         definition = self.get_automation(automation_id, user_id)
 
         if definition.is_paused:

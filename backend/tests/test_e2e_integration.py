@@ -14,7 +14,6 @@ from datetime import datetime, date, timezone, timedelta
 from decimal import Decimal
 import pytest
 from unittest.mock import patch, MagicMock
-from langchain_core.messages import AIMessage as LcAIMessage
 
 
 class TestEndToEndSystemIntegration:
@@ -255,43 +254,6 @@ class TestEndToEndSystemIntegration:
         count_resp = client.get("/api/v1/notifications/unread-count", headers=auth_headers)
         assert count_resp.status_code == 200
         assert "unread_count" in count_resp.get_json()["data"]
-
-    @patch("app.ai.workflow.get_llm")
-    def test_cross_module_ai_chat_feedback_and_prompt_attribution(self, mock_get_llm, client, auth_headers):
-        """Test AI assistant message generation, prompt version attribution, and feedback rating."""
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = LcAIMessage(
-            content="Hello! I am your LifeOS Assistant, running locally."
-        )
-        mock_get_llm.return_value = mock_llm
-
-        # 1. Send AI message
-        chat_resp = client.post(
-            "/api/v1/ai/chat",
-            json={"message": "What is the status of my goals?"},
-            headers=auth_headers
-        )
-        assert chat_resp.status_code == 200
-        chat_data = chat_resp.get_json()["data"]
-        assistant_msg_id = chat_data["assistant_message"]["id"]
-
-        # 2. Submit user feedback (+1 positive rating)
-        feedback_payload = {
-            "message_id": assistant_msg_id,
-            "rating": 1,
-            "feedback_type": "thumbs_up",
-            "comment": "Accurate and clear summary."
-        }
-        fb_resp = client.post("/api/v1/ai/feedback", json=feedback_payload, headers=auth_headers)
-        assert fb_resp.status_code in (200, 201)
-        fb_data = fb_resp.get_json()["data"]["feedback"]
-        assert fb_data["message_id"] == assistant_msg_id
-        assert fb_data["rating"] == 1
-
-        # 3. Query feedback by message ID
-        msg_fb_resp = client.get(f"/api/v1/ai/messages/{assistant_msg_id}/feedback", headers=auth_headers)
-        assert msg_fb_resp.status_code == 200
-        assert msg_fb_resp.get_json()["data"]["feedback"]["id"] == fb_data["id"]
 
     def test_holistic_life_score_synthesis(self, client, auth_headers):
         """Test that the 4-pillar Life Score Engine accurately synthesizes composite metrics."""

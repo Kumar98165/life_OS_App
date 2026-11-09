@@ -31,8 +31,6 @@ export * from './dashboard';
 export * from './planner';
 export * from './goal';
 export * from './habit';
-export * from './ai';
-export * from './aiMemory';
 
 export interface Note {
   id: string;

@@ -109,8 +109,8 @@ export const LifeInsightsScreen: React.FC = () => {
               />
               <Caption style={styles.provenanceText}>
                 {insights?.is_fallback
-                  ? 'Deterministic Analytics Engine (Ollama Offline)'
-                  : 'Synthesized locally via Ollama • Qwen 2.5 3B (Zero Cloud Telemetry)'}
+                  ? 'Deterministic Analytics Engine'
+                  : 'Synthesized via Deterministic Rules Engine (Zero Cloud Telemetry)'}
               </Caption>
             </View>
 

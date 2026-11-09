@@ -15,7 +15,7 @@ Comprehensive tests covering:
     - Tier determination
     - Medical/psychological disclaimer
 - AI Insights:
-    - Ollama LLM integration mock
+    - Deterministic insights generation
     - Deterministic fallback when LLM is unavailable
 - IDOR isolation between users
 """
@@ -271,44 +271,16 @@ def test_trends_and_overview(client, auth_headers):
 
 
 # -----------------------------------------------------------------------------
-# 8. AI Insights (LLM Success & Fallback)
+# 8. Deterministic Productivity Insights
 # -----------------------------------------------------------------------------
 
-def test_ai_insights_fallback_and_llm(client, auth_headers):
-    """Verify insights endpoint falls back cleanly when LLM raises, and parses structured output when LLM succeeds."""
-    # 1. Fallback when LLM fails
-    with patch("app.services.analytics_service.get_llm") as mock_get_llm:
-        mock_get_llm.side_effect = RuntimeError("Ollama service down")
-        resp = client.get("/api/v1/analytics/insights?period=week", headers=auth_headers)
-        assert resp.status_code == 200
-        data = resp.get_json()["data"]
-        assert data["is_fallback"] is True
-        assert len(data["actionable_recommendations"]) >= 1
-
-    # 2. LLM response success
-    with patch("app.services.analytics_service.get_llm") as mock_get_llm:
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = MagicMock(content="""
-        {
-            "executive_summary": "Great momentum this week across all dimensions.",
-            "productivity_observation": "Tasks were executed with 92% velocity.",
-            "habit_observation": "Consistent routines kept streaks unbroken.",
-            "financial_observation": "Savings rate remained above 50%.",
-            "actionable_recommendations": [
-                "Schedule a rest day.",
-                "Review monthly goals.",
-                "Allocate savings to emergency fund."
-            ]
-        }
-        """)
-        mock_get_llm.return_value = mock_llm
-
-        resp = client.get("/api/v1/analytics/insights?period=week", headers=auth_headers)
-        assert resp.status_code == 200
-        data = resp.get_json()["data"]
-        assert data["is_fallback"] is False
-        assert "Great momentum" in data["executive_summary"]
-        assert len(data["actionable_recommendations"]) == 3
+def test_deterministic_insights(client, auth_headers):
+    """Verify insights endpoint generates structured actionable recommendations from verified data."""
+    resp = client.get("/api/v1/analytics/insights?period=week", headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert "executive_summary" in data
+    assert len(data["actionable_recommendations"]) >= 1
 
 
 # -----------------------------------------------------------------------------

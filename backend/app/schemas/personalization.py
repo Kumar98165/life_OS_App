@@ -53,4 +53,4 @@ class UpdateDailyRoutineRequest(BaseModel):
 
 
 class ResetPreferencesRequest(BaseModel):
-    target: str = Field(..., pattern="^(all|dashboard|routine|identity|ai_style)$")
+    target: str = Field(..., pattern="^(all|dashboard|routine|identity)$")

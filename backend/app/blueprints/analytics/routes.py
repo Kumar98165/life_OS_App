@@ -162,7 +162,7 @@ def get_life_score():
 @analytics_bp.route("/insights", methods=["GET"])
 @jwt_required()
 def get_ai_insights():
-    """Synthesize personal narrative insights and suggestions via local Ollama LLM."""
+    """Synthesize personal narrative insights and suggestions via deterministic analytics engine."""
     user_id = get_jwt_identity()
     try:
         params = _get_validated_date_params()

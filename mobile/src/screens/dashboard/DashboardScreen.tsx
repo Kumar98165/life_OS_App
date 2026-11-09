@@ -17,7 +17,6 @@ import {
   TodayTasksSection,
   ActiveGoalsSection,
   HabitSummarySection,
-  AIQuickAccessCard,
   FinanceQuickCard,
   AnalyticsQuickCard,
   AlertDialog,
@@ -54,9 +53,6 @@ export const DashboardScreen: React.FC = () => {
         break;
       case 'create_goal':
         navigation.navigate('GoalsTab');
-        break;
-      case 'talk_ai':
-        navigation.navigate('AIAssistant');
         break;
     }
   };
@@ -163,14 +159,6 @@ export const DashboardScreen: React.FC = () => {
             onOpenAnalytics={() => navigation.navigate('LifeAnalytics')}
           />
         );
-      case 'ai_quick_access':
-        return (
-          <AIQuickAccessCard
-            key={id}
-            onTalkToAI={() => navigation.navigate('AIAssistant')}
-            onNavigateScreen={(screen: string) => navigation.navigate(screen)}
-          />
-        );
       default:
         return null;
     }
@@ -203,7 +191,6 @@ export const DashboardScreen: React.FC = () => {
         {/* Dynamic Personalized Widget List */}
         {sortedWidgetIds.map(renderWidget)}
       </ScrollContainer>
-
       {/* Feature notice dialog */}
       <AlertDialog
         visible={activeDialog.visible}

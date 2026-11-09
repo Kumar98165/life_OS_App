@@ -14,7 +14,6 @@ Verifies:
 import pytest
 from app.models.personalization import UserPersonalization, DailyRoutine, DEFAULT_DASHBOARD_WIDGETS
 from app.services.personalization_service import personalization_service
-from app.ai.context_engine import LifeOSContextEngine
 from app.models.user import User
 from app.extensions import db
 
@@ -158,17 +157,33 @@ def test_context_engine_personalization_injection(app):
             }
         )
 
-        engine = LifeOSContextEngine()
-        ctx = engine.build_user_context(user.id)
-        assert ctx["user_name"] == "Johnny"
-        assert ctx["personalization"]["productivity_style"] == "pomodoro"
-        assert ctx["personalization"]["ai_response_style"] == "motivational"
-        assert ctx["daily_routine"]["work_start"] == "08:00"
+def test_personalization_data_integrity(app):
+    """Verify personalization and routine data structures persist without AI context engine."""
+    with app.app_context():
+        user = User(email="john@lifeos.internal", full_name="Johnathan")
+        user.set_password("SecurePass123!")
+        db.session.add(user)
+        db.session.commit()
 
-        prompt_text = engine.format_context_prompt(ctx)
-        assert "Current LifeOS Context for Johnny" in prompt_text
-        assert "Productivity Style: pomodoro" in prompt_text
-        assert "Working Hours: 08:00 - 16:00" in prompt_text
+        p = personalization_service.update_personalization(
+            user_id=user.id,
+            updates={
+                "preferred_name": "Johnny",
+                "productivity_style": "pomodoro",
+            }
+        )
+        r = personalization_service.update_daily_routine(
+            user_id=user.id,
+            updates={
+                "work_start": "08:00",
+                "work_end": "16:00",
+                "preferred_planning_time": "07:30"
+            }
+        )
+
+        assert p.preferred_name == "Johnny"
+        assert p.productivity_style == "pomodoro"
+        assert r.work_start == "08:00"
 
 
 # -----------------------------------------------------------------------------

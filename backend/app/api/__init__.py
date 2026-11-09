@@ -7,13 +7,6 @@ from app.blueprints.tasks import tasks_bp
 from app.blueprints.planner import planner_bp
 from app.blueprints.goals import goals_bp
 from app.blueprints.habits import habits_bp
-from app.blueprints.ai import ai_bp
-from app.blueprints.ai_memory import ai_memory_bp
-from app.blueprints.ai_feedback import ai_feedback_bp
-from app.blueprints.ai_prompt import ai_prompt_bp
-from app.blueprints.ai_dataset import ai_dataset_bp
-from app.blueprints.ai_model import ai_model_bp
-from app.blueprints.ai_improvement import ai_improvement_bp
 from app.blueprints.finance import finance_bp
 from app.blueprints.notifications import notifications_bp
 from app.blueprints.analytics import analytics_bp
@@ -36,11 +29,4 @@ def register_api_blueprints(app: Flask) -> None:
     app.register_blueprint(automations_bp, url_prefix="/api/v1/automations")
     app.register_blueprint(voice_bp, url_prefix="/api/v1/voice")
     app.register_blueprint(personalization_bp, url_prefix="/api/v1/personalization")
-    app.register_blueprint(ai_bp, url_prefix="/api/v1/ai")
-    app.register_blueprint(ai_memory_bp, url_prefix="/api/v1/ai/memories")
-    app.register_blueprint(ai_feedback_bp, url_prefix="/api/v1/ai")
-    app.register_blueprint(ai_prompt_bp, url_prefix="/api/v1/ai/prompts")
-    app.register_blueprint(ai_dataset_bp, url_prefix="/api/v1/ai")
-    app.register_blueprint(ai_model_bp, url_prefix="/api/v1/ai/models")
-    app.register_blueprint(ai_improvement_bp, url_prefix="/api/v1/ai/improvement")
  

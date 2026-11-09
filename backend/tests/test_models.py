@@ -3,8 +3,7 @@ from decimal import Decimal
 from app.extensions import db
 from app.models import (
     User, UserPreference, RefreshToken, TaskCategory, Task, Goal, GoalMilestone,
-    Habit, HabitLog, PlannerBlock, Note, NoteTag, AIConversation, AIMessage,
-    AIMemory, FinancialAccount, FinancialCategory, FinancialTransaction,
+    Habit, HabitLog, PlannerBlock, Note, NoteTag, FinancialAccount, FinancialCategory, FinancialTransaction,
     Notification, ActivityLog
 )
 
@@ -81,23 +80,6 @@ def test_complete_domain_models_and_cascade(app):
         note.tags.append(tag)
         db.session.add(note)
 
-        # 9. AI Conversation & Message
-        conv = AIConversation(user_id=user.id, title="Database Tuning Chat")
-        db.session.add(conv)
-        db.session.commit()
-
-        msg = AIMessage(conversation_id=conv.id, role="user", content="How do indexes scale in PostgreSQL 18?")
-        db.session.add(msg)
-
-        # 10. AI Memory
-        mem = AIMemory(
-            user_id=user.id,
-            memory_key="preferred_theme",
-            memory_value="White Glassmorphism",
-            memory_type="preference"
-        )
-        db.session.add(mem)
-
         # 11 & 12. Finance Accounts, Category & Transaction
         fcat = FinancialCategory(user_id=user.id, name="Software Subscriptions", category_type="expense")
         db.session.add(fcat)
@@ -132,7 +114,6 @@ def test_complete_domain_models_and_cascade(app):
         assert len(user.tasks) == 1
         assert len(user.goals) == 1
         assert len(user.habits) == 1
-        assert len(user.ai_conversations) == 1
         assert len(user.notes) == 1
         assert len(user.financial_transactions) == 1
         assert len(user.notifications) == 1
@@ -146,7 +127,6 @@ def test_complete_domain_models_and_cascade(app):
         assert Task.query.filter_by(user_id=user.id).first() is None
         assert Goal.query.filter_by(user_id=user.id).first() is None
         assert Habit.query.filter_by(user_id=user.id).first() is None
-        assert AIConversation.query.filter_by(user_id=user.id).first() is None
         assert Note.query.filter_by(user_id=user.id).first() is None
         assert FinancialAccount.query.filter_by(user_id=user.id).first() is None
         assert Notification.query.filter_by(user_id=user.id).first() is None

@@ -41,13 +41,6 @@ class BaseConfig:
         "pool_pre_ping": True,
     }
 
-    # Local AI Settings
-    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-    OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "60"))
-    OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.7"))
-    OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "1024"))
-
 class DevelopmentConfig(BaseConfig):
     """Development configuration."""
     DEBUG = True

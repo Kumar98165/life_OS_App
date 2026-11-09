@@ -391,7 +391,7 @@ class AutomationExecutionLog(BaseModel):
         index=True
     )
 
-    # Step in the LangGraph workflow:
+    # Step in the automation workflow:
     # classification, context_retrieval, planning, risk_assessment,
     # approval_gate, execution, verification, response_generation
     step_name: Mapped[str] = mapped_column(String(64), nullable=False)

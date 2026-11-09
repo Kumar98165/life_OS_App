@@ -519,7 +519,7 @@ class FinanceService:
     # ---------------------------------------------------------
 
     def get_ai_insights(self, user_id: str, month: Optional[str] = None) -> Dict[str, Any]:
-        """Generate verified read-only financial insights using local Ollama model."""
+        """Generate verified read-only financial insights using deterministic calculations."""
         summary = self.get_dashboard_summary(user_id, month)
 
         # Synthesize verified financial facts
@@ -558,22 +558,7 @@ class FinanceService:
             f"- **Recommendation**: Continue monitoring your primary expenses to maximize your monthly savings rate."
         )
 
-        # Attempt local LLM enrichment if Ollama is accessible
-        try:
-            from app.ai.config import get_llm
-            from langchain_core.messages import SystemMessage, HumanMessage
-            llm = get_llm()
-            resp = llm.invoke([
-                SystemMessage(content="You are an empathetic, disciplined personal finance assistant."),
-                HumanMessage(content=prompt)
-            ])
-            content = resp.content if hasattr(resp, "content") else str(resp)
-            if content and content.strip():
-                insights_text = content.strip()
-        except Exception:
-            # Safe deterministic fallback without breaking user flow
-            pass
-
+        # Verified deterministic insights based on user financial transactions
         return {
             "month": month,
             "metrics": {
@@ -585,5 +570,5 @@ class FinanceService:
             "top_categories": top_cats,
             "over_budget_count": len(over_budgets),
             "insights": insights_text,
-            "disclaimer": "AI financial insights are educational and read-only. LifeOS never executes transactions or payments."
+            "disclaimer": "Financial insights are educational and read-only. LifeOS never executes transactions or payments."
         }

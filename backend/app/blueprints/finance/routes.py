@@ -466,7 +466,7 @@ def get_finance_dashboard():
 @finance_bp.route("/insights", methods=["GET"])
 @jwt_required()
 def get_finance_insights():
-    """Retrieve verified read-only AI financial observations from local Ollama model."""
+    """Retrieve verified read-only financial observations from deterministic financial analytics."""
     user_id = get_jwt_identity()
     month = request.args.get("month")
 

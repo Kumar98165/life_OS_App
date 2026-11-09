@@ -216,7 +216,7 @@ export const LifeAnalyticsScreen: React.FC = () => {
               </View>
               <View style={styles.aiBannerTitleWrap}>
                 <BodyText style={styles.aiBannerTitle}>Local AI Personal Insights</BodyText>
-                <Caption style={styles.aiBannerSub}>Synthesized with Ollama Qwen 2.5</Caption>
+                <Caption style={styles.aiBannerSub}>Deterministic Productivity Insights</Caption>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
             </View>

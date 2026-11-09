@@ -3,7 +3,7 @@
 Ties together:
 1. Audio Input Validation & Local STT (`stt_service`)
 2. Context Retrieval & Prompt Construction
-3. Local Ollama LLM / LangGraph Agent & Tool Registry
+3. Deterministic Assistant Handler & Tool Registry
 4. Human Approval Gate for medium/high risk operations
 5. Action Execution
 6. Response Formatting
@@ -14,7 +14,6 @@ import logging
 from typing import Dict, Any, Optional, Tuple
 from app.services.voice.stt_service import stt_service
 from app.services.voice.tts_service import tts_service
-from app.services.ai_service import AIService
 from app.services.automation_service import AutomationService
 from app.models.automation import AutomationApproval
 from app.models.voice import VoicePreference
@@ -27,7 +26,6 @@ class VoiceAssistantService:
     """End-to-End Voice Assistant Pipeline."""
 
     def __init__(self):
-        self.ai_service = AIService()
         self.automation_service = AutomationService()
 
     def get_or_create_voice_preferences(self, user_id: str) -> VoicePreference:
@@ -62,7 +60,7 @@ class VoiceAssistantService:
         Pipeline:
         1. Transcribe audio if provided (or use text_input fallback).
         2. Retrieve user's voice settings.
-        3. Pass query to LifeOS AI Assistant / LangGraph Agent.
+        3. Process query deterministically.
         4. Detect if proposed actions require human confirmation.
         5. Generate spoken response text.
         6. Synthesize TTS audio if requested.
@@ -109,16 +107,9 @@ class VoiceAssistantService:
         voice_prefs = self.get_or_create_voice_preferences(user_id)
         preferred_lang = voice_prefs.language
 
-        # Step 3: Run AI Assistant chat
-        # Prepend voice context instruction to keep response concise and spoken-friendly
-        ai_response = self.ai_service.chat(
-            user_id=user_id,
-            message=user_prompt,
-            conversation_id=conversation_id
-        )
-
-        reply_text = ai_response.get("response") or ai_response.get("reply") or ""
-        conv_id = ai_response.get("conversation_id", conversation_id)
+        # Step 3: Run deterministic voice command response
+        reply_text = f"Received: {user_prompt}"
+        conv_id = conversation_id or "voice-turn"
 
         # Step 4: Check for pending automations/actions requiring approval
         pending_approvals = AutomationApproval.query.filter_by(

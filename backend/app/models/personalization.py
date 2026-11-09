@@ -19,7 +19,6 @@ DEFAULT_DASHBOARD_WIDGETS = [
     {"id": "habit_summary", "visible": True, "order": 5, "title": "Habits & Streaks"},
     {"id": "finance_quick", "visible": True, "order": 6, "title": "Money Management"},
     {"id": "analytics_quick", "visible": True, "order": 7, "title": "Life Analytics"},
-    {"id": "ai_quick_access", "visible": True, "order": 8, "title": "AI Assistant"},
 ]
 
 

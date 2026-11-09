@@ -5,12 +5,10 @@ from zoneinfo import ZoneInfo
 from app.repositories.analytics_repository import AnalyticsRepository
 from app.models.user_preference import UserPreference
 from app import db
-from app.ai.config import get_llm
-from langchain_core.messages import SystemMessage, HumanMessage
 
 
 class AnalyticsService:
-    """Business logic for LifeOS analytics, Life Score calculation, and AI insights."""
+    """Business logic for LifeOS analytics, Life Score calculation, and deterministic productivity insights."""
 
     def __init__(self, repo: Optional[AnalyticsRepository] = None):
         self.repo = repo or AnalyticsRepository()
@@ -323,7 +321,7 @@ class AnalyticsService:
     # -------------------------------------------------------------------------
 
     def generate_ai_insights(self, user_id: str, period: str = "week", **kwargs) -> Dict[str, Any]:
-        """Synthesize narrative observations and actionable suggestions using local Qwen model."""
+        """Synthesize narrative observations and actionable suggestions using deterministic rules."""
         overview = self.get_analytics_overview(user_id, period, **kwargs)
         score_data = self.calculate_life_score(user_id, period, **kwargs)
 
@@ -364,44 +362,5 @@ class AnalyticsService:
                 "is_fallback": is_fallback,
             }
 
-        try:
-            llm = get_llm(temperature=0.3)
-            prompt = (
-                f"You are LifeOS Analytics Engine. Analyze the user's verified metrics for the {period}:\n"
-                f"- Life Score: {overview['life_score']}/100 ({overview['life_score_tier']})\n"
-                f"- Productivity: {overview['productivity_summary']['completed_tasks']} tasks completed ({overview['productivity_summary']['completion_percentage']}%)\n"
-                f"- Habits: {overview['habits_summary']['consistency_percentage']}% consistency across {overview['habits_summary']['active_habits']} habits\n"
-                f"- Financials: ${overview['finance_summary']['net_savings']} net savings ({overview['finance_summary']['savings_rate']}% savings rate)\n\n"
-                f"Return a strict JSON object with these exact keys:\n"
-                f"- executive_summary: 1-2 sentence overall summary\n"
-                f"- productivity_observation: 1 factual sentence on work patterns\n"
-                f"- habit_observation: 1 factual sentence on consistency\n"
-                f"- financial_observation: 1 factual sentence on spending & savings\n"
-                f"- actionable_recommendations: list of 3 concise actionable tips\n"
-                f"Do NOT invent unverified data."
-            )
-            messages = [
-                SystemMessage(content="You are a personal productivity analyst. Return strict JSON only."),
-                HumanMessage(content=prompt)
-            ]
-            response = llm.invoke(messages)
-            text = response.content if hasattr(response, "content") else str(response)
-
-            # Extract JSON block
-            if "{" in text and "}" in text:
-                json_str = text[text.find("{"):text.rfind("}") + 1]
-                parsed = json.loads(json_str)
-                return {
-                    "generated_at": datetime.now(timezone.utc).isoformat(),
-                    "period": period,
-                    "life_score": overview["life_score"],
-                    "executive_summary": parsed.get("executive_summary", ""),
-                    "productivity_observation": parsed.get("productivity_observation", ""),
-                    "habit_observation": parsed.get("habit_observation", ""),
-                    "financial_observation": parsed.get("financial_observation", ""),
-                    "actionable_recommendations": parsed.get("actionable_recommendations", []),
-                    "is_fallback": False,
-                }
-            return build_fallback(is_fallback=True)
-        except Exception:
-            return build_fallback(is_fallback=True)
+        # Deterministic analysis based on real metrics without external LLM
+        return build_fallback(is_fallback=False)

@@ -20,9 +20,6 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: undefined;
   Habits: undefined;
-  AIAssistant: { conversationId?: string } | undefined;
-  AIMemory: undefined;
-  AIImprovementDashboard: undefined;
   FinanceDashboard: undefined;
   AddTransaction: { transactionId?: string } | undefined;
   TransactionHistory: undefined;
@@ -48,7 +45,6 @@ export type RootStackParamList = {
   AutomationExecutionHistory: { executionId?: string } | undefined;
   VoiceAssistant: { conversationId?: string } | undefined;
   VoiceSettings: undefined;
-  VoiceConversationHistory: undefined;
   PersonalizationSettings: undefined;
   DashboardCustomization: undefined;
   DailyRoutine: undefined;

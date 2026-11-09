@@ -101,7 +101,7 @@ export const WelcomeScreen: React.FC = () => {
               <View style={styles.featureText}>
                 <BodyText weight="600">Local Privacy-First AI</BodyText>
                 <Caption color="secondary">
-                  Powered by local LLMs with LangGraph context orchestration.
+                  Powered by local privacy-first architecture with offline-ready synchronization.
                 </Caption>
               </View>
             </View>

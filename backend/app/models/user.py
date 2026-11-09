@@ -85,26 +85,6 @@ class User(BaseModel):
         back_populates="user",
         cascade="all, delete-orphan"
     )
-    ai_conversations: Mapped[List["AIConversation"]] = relationship(
-        "AIConversation",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-    ai_memories: Mapped[List["AIMemory"]] = relationship(
-        "AIMemory",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-    ai_feedback: Mapped[List["AIFeedback"]] = relationship(
-        "AIFeedback",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
-    ai_training_samples: Mapped[List["AITrainingSample"]] = relationship(
-        "AITrainingSample",
-        back_populates="user",
-        cascade="all, delete-orphan"
-    )
     financial_accounts: Mapped[List["FinancialAccount"]] = relationship(
         "FinancialAccount",
         back_populates="user",

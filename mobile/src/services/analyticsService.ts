@@ -88,7 +88,7 @@ export const analyticsService = {
   },
 
   /**
-   * Synthesize narrative personal insights and actionable tips via local Ollama.
+   * Synthesize narrative personal insights and actionable tips via deterministic analytics.
    */
   async getAIInsights(params?: DateRangeParams): Promise<AIInsightsResponse> {
     const response = await apiClient.get<ApiResponse<AIInsightsResponse>>(
