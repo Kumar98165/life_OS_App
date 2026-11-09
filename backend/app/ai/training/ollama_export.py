@@ -1,5 +1,4 @@
 """LifeOS - Ollama Model Converter and Packaging Specification.
-
 Coordinates:
 - Merging PEFT LoRA adapter weights with base Qwen 2.5:3B model
 - GGUF export conversion instructions (via llama.cpp convert_hf_to_gguf.py)

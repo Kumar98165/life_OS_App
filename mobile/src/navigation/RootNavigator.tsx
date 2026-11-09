@@ -10,6 +10,7 @@ import {
   HabitsScreen,
   AIAssistantScreen,
   AIMemoryScreen,
+  AIImprovementDashboardScreen,
   FinanceDashboardScreen,
   AddTransactionScreen,
   TransactionHistoryScreen,
@@ -41,9 +42,7 @@ import {
   DailyRoutineScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
 export const RootNavigator: React.FC = () => {
   const {
     isAuthenticated,
@@ -88,6 +87,11 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="AIMemory"
               component={AIMemoryScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="AIImprovementDashboard"
+              component={AIImprovementDashboardScreen}
               options={{ animation: 'slide_from_right' }}
             />
             <Stack.Screen

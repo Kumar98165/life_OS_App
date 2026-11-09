@@ -22,6 +22,7 @@ export type RootStackParamList = {
   Habits: undefined;
   AIAssistant: { conversationId?: string } | undefined;
   AIMemory: undefined;
+  AIImprovementDashboard: undefined;
   FinanceDashboard: undefined;
   AddTransaction: { transactionId?: string } | undefined;
   TransactionHistory: undefined;

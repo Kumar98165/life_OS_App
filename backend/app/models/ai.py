@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from sqlalchemy import String, Text, Float, Integer, JSON, DateTime, ForeignKey, Index, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import BaseModel
@@ -802,4 +802,106 @@ class AIModelRollbackLog(BaseModel):
             "executed_by": self.executed_by,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class AITrainingJob(BaseModel):
+    """Orchestration record for continuous model training jobs."""
+    __tablename__ = "ai_training_jobs"
+
+    job_name: Mapped[str] = mapped_column(
+        String(100),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+    dataset_version_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("ai_dataset_versions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    base_model_name: Mapped[str] = mapped_column(
+        String(100),
+        default="Qwen/Qwen2.5-3B-Instruct",
+        nullable=False
+    )
+    candidate_model_tag: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False
+    )
+    training_mode: Mapped[str] = mapped_column(
+        String(20),
+        default="qlora_4bit",
+        nullable=False
+    )  # qlora_4bit, lora_fp16
+    status: Mapped[str] = mapped_column(
+        String(30),
+        default="pending",
+        nullable=False
+    )  # pending, validating, ready, running, completed, failed, cancelled
+    config_payload: Mapped[Dict[str, Any] | None] = mapped_column(
+        JSON,
+        nullable=True
+    )
+    log_output: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    error_message: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+    artifact_checksum: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )
+    artifact_directory: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
+    created_by_user_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
+    # Relationships
+    dataset_version: Mapped["AIDatasetVersion"] = relationship("AIDatasetVersion")
+    created_by: Mapped[Optional["User"]] = relationship("User")
+
+    __table_args__ = (
+        Index("ix_ai_training_jobs_status", "status"),
+        Index("ix_ai_training_jobs_dataset", "dataset_version_id"),
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "job_name": self.job_name,
+            "dataset_version_id": self.dataset_version_id,
+            "dataset_version_name": self.dataset_version.version_name if self.dataset_version else None,
+            "base_model_name": self.base_model_name,
+            "candidate_model_tag": self.candidate_model_tag,
+            "training_mode": self.training_mode,
+            "status": self.status,
+            "config_payload": self.config_payload,
+            "log_output": self.log_output,
+            "error_message": self.error_message,
+            "artifact_checksum": self.artifact_checksum,
+            "artifact_directory": self.artifact_directory,
+            "created_by_user_id": self.created_by_user_id,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
 

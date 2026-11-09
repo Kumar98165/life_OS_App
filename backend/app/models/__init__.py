@@ -19,6 +19,7 @@ from app.models.ai import (
     AIEvaluationMetric,
     AIModelVersion,
     AIModelRollbackLog,
+    AITrainingJob,
 )
 from app.models.finance import (
     FinancialAccount,

@@ -11,6 +11,7 @@ export * from './goals/GoalsScreen';
 export * from './habits/HabitsScreen';
 export * from './ai/AIAssistantScreen';
 export * from './ai/memory/AIMemoryScreen';
+export * from './ai/AIImprovementDashboardScreen';
 export * from './finance';
 export * from './notifications';
 export * from './analytics';
