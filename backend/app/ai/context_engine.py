@@ -13,6 +13,7 @@ from app.ai.tools import (
     get_today_schedule
 )
 from app.models.user import User
+from app.models.personalization import UserPersonalization, DailyRoutine
 
 
 class LifeOSContextEngine:
@@ -21,7 +22,14 @@ class LifeOSContextEngine:
     def build_user_context(self, user_id: str) -> Dict[str, Any]:
         """Query real database tables and assemble structured context dictionary."""
         user = User.query.filter_by(id=user_id).first()
-        user_name = user.full_name if user else "User"
+        personalization = UserPersonalization.query.filter_by(user_id=user_id).first()
+        routine = DailyRoutine.query.filter_by(user_id=user_id).first()
+
+        user_name = (
+            personalization.preferred_name
+            if (personalization and personalization.preferred_name)
+            else (user.full_name if user else "User")
+        )
 
         pending_tasks = get_pending_tasks(user_id, limit=6)
         today_tasks = get_today_tasks(user_id, limit=6)
@@ -37,6 +45,8 @@ class LifeOSContextEngine:
             "active_goals": active_goals,
             "habits": habits,
             "schedule": schedule,
+            "personalization": personalization.to_dict() if (personalization and personalization.personalization_enabled) else None,
+            "daily_routine": routine.to_dict() if routine else None,
         }
 
     def format_context_prompt(self, context: Dict[str, Any]) -> str:
@@ -46,6 +56,27 @@ class LifeOSContextEngine:
             f"**Today's Date**: {context.get('today_date')}",
             ""
         ]
+
+        # User Personalization & Routine context
+        p = context.get("personalization")
+        r = context.get("daily_routine")
+        if p or r:
+            lines.append("**Personal Preferences & Schedule Rhythm**:")
+            if p:
+                lines.append(
+                    f"- Productivity Style: {p.get('productivity_style')}, Priority Strategy: {p.get('task_priority_strategy')}"
+                )
+                lines.append(
+                    f"- AI Desired Style: {p.get('ai_response_style')}, Length: {p.get('ai_response_length')}, Language: {p.get('preferred_language')}"
+                )
+            if r:
+                lines.append(
+                    f"- Working Hours: {r.get('work_start')} - {r.get('work_end')}, Planning Time: {r.get('preferred_planning_time')}"
+                )
+                lines.append(
+                    f"- Sleep/Wake Rhythm: Wake at {r.get('wake_time')}, Sleep at {r.get('sleep_time')}"
+                )
+            lines.append("")
 
         # 1. Schedule
         schedule = context.get("schedule", [])

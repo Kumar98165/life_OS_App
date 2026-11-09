@@ -31,6 +31,7 @@ from app.models.automation import (
     AutomationExecutionLog,
 )
 from app.models.voice import VoicePreference
+from app.models.personalization import UserPersonalization, DailyRoutine, DEFAULT_DASHBOARD_WIDGETS
 from app.models.activity_log import ActivityLog
 
 __all__ = [
@@ -39,6 +40,9 @@ __all__ = [
     "User",
     "RefreshToken",
     "UserPreference",
+    "UserPersonalization",
+    "DailyRoutine",
+    "DEFAULT_DASHBOARD_WIDGETS",
     "VoicePreference",
     "TaskCategory",
     "Task",

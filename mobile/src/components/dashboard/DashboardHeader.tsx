@@ -10,6 +10,7 @@ export interface DashboardHeaderProps {
   userName?: string | null;
   onProfilePress?: () => void;
   onNotificationPress?: () => void;
+  onCustomizePress?: () => void;
   hasUnreadNotifications?: boolean;
 }
 
@@ -17,6 +18,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userName,
   onProfilePress,
   onNotificationPress,
+  onCustomizePress,
   hasUnreadNotifications = false,
 }) => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -78,6 +80,23 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             />
           )}
         </View>
+
+        {/* Customize Dashboard Button */}
+        {onCustomizePress && (
+          <IconButton
+            icon={
+              <Ionicons
+                name="options-outline"
+                size={20}
+                color={theme.colors.textPrimary}
+              />
+            }
+            onPress={onCustomizePress}
+            variant="glass"
+            size={40}
+            accessibilityLabel="Customize Dashboard Layout"
+          />
+        )}
 
         {/* Profile Avatar Button */}
         {onProfilePress && (

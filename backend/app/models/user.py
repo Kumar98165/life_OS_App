@@ -167,6 +167,18 @@ class User(BaseModel):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    personalization: Mapped[Optional["UserPersonalization"]] = relationship(
+        "UserPersonalization",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+    daily_routine: Mapped[Optional["DailyRoutine"]] = relationship(
+        "DailyRoutine",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         Index("ix_users_email_lower", "email"),

@@ -48,6 +48,9 @@ export type RootStackParamList = {
   VoiceAssistant: { conversationId?: string } | undefined;
   VoiceSettings: undefined;
   VoiceConversationHistory: undefined;
+  PersonalizationSettings: undefined;
+  DashboardCustomization: undefined;
+  DailyRoutine: undefined;
 };
 
 export type AuthNavigationProp = NativeStackNavigationProp<AuthStackParamList>;

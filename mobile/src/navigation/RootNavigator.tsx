@@ -36,6 +36,9 @@ import {
   VoiceAssistantScreen,
   VoiceSettingsScreen,
   VoiceConversationHistoryScreen,
+  PersonalizationSettingsScreen,
+  DashboardCustomizationScreen,
+  DailyRoutineScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 
@@ -215,6 +218,21 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="VoiceConversationHistory"
               component={VoiceConversationHistoryScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="PersonalizationSettings"
+              component={PersonalizationSettingsScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="DashboardCustomization"
+              component={DashboardCustomizationScreen}
+              options={{ animation: 'slide_from_right' }}
+            />
+            <Stack.Screen
+              name="DailyRoutine"
+              component={DailyRoutineScreen}
               options={{ animation: 'slide_from_right' }}
             />
           </>

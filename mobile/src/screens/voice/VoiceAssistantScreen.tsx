@@ -54,10 +54,10 @@ export function VoiceAssistantScreen({ navigation, route }: VoiceAssistantScreen
     return () => {
       // Unload audio on unmount
       if (soundRef.current) {
-        soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current.unloadAsync().catch(() => { });
       }
       if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+        recordingRef.current.stopAndUnloadAsync().catch(() => { });
       }
     };
   }, []);
