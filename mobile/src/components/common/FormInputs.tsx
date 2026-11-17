@@ -41,15 +41,14 @@ export const GlassInput: React.FC<GlassInputProps> = ({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: theme.colors.glassBackgroundSolid,
+            backgroundColor: theme.colors.surfaceSubtle,
             borderColor: error
               ? theme.colors.error
               : isFocused
               ? theme.colors.primary
-              : theme.colors.glassBorder,
-            borderRadius: theme.borderRadius.md,
+              : theme.colors.border,
+            borderRadius: theme.borderRadius.lg,
           },
-          theme.shadows.subtle,
         ]}
       >
         {leftIcon ? <View style={styles.iconSlot}>{leftIcon}</View> : null}
@@ -298,9 +297,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    height: 48,
-    paddingHorizontal: 12,
+    borderWidth: 1.5,
+    height: 52,
+    paddingHorizontal: 16,
   },
   selectContainer: {
     justifyContent: 'space-between',

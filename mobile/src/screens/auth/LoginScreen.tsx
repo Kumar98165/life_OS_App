@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +17,6 @@ import { useAuthStore } from '../../store';
 import {
   SafeAreaContainer,
   ScrollContainer,
-  GlassCard,
   GlassInput,
   PasswordInput,
   PrimaryButton,
@@ -60,7 +65,13 @@ export const LoginScreen: React.FC = () => {
         <ScrollContainer contentContainerStyle={styles.scrollContent}>
           {/* Back Button */}
           <TouchableOpacity
-            style={[styles.backBtn, { borderColor: theme.colors.glassBorder }]}
+            style={[
+              styles.backBtn,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surfaceSubtle,
+              },
+            ]}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             accessibilityLabel="Go back"
@@ -68,25 +79,35 @@ export const LoginScreen: React.FC = () => {
             <Ionicons name="chevron-back" size={20} color={theme.colors.textPrimary} />
           </TouchableOpacity>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Heading level={1}>Welcome Back</Heading>
+          {/* Clean Modern Branding Header */}
+          <View style={styles.brandHeader}>
+            <View
+              style={[
+                styles.logoIconCircle,
+                { backgroundColor: `${theme.colors.primary}18` },
+              ]}
+            >
+              <Ionicons name="shield-checkmark" size={32} color={theme.colors.primary} />
+            </View>
+            <Heading level={1} style={styles.title}>
+              Welcome Back
+            </Heading>
             <BodyText color="secondary" style={styles.subtitle}>
-              Sign in to access your LifeOS dashboard and personal AI.
+              Sign in to your account
             </BodyText>
           </View>
 
-          {/* Form Card */}
-          <GlassCard elevation="floating" style={styles.formCard}>
+          {/* Unified Seamless Form Area */}
+          <View style={styles.formArea}>
             {/* Email Field */}
             <Controller
               control={control}
               name="email"
               render={({ field: { onChange, onBlur, value } }) => (
                 <GlassInput
-                  label="Email Address"
+                  label="Email"
                   required
-                  placeholder="alex@example.com"
+                  placeholder="name@example.com"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -95,7 +116,7 @@ export const LoginScreen: React.FC = () => {
                   onBlur={onBlur}
                   error={errors.email?.message}
                   leftIcon={
-                    <Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />
+                    <Ionicons name="mail-outline" size={19} color={theme.colors.textMuted} />
                   }
                 />
               )}
@@ -117,7 +138,7 @@ export const LoginScreen: React.FC = () => {
                   leftIcon={
                     <Ionicons
                       name="lock-closed-outline"
-                      size={18}
+                      size={19}
                       color={theme.colors.textMuted}
                     />
                   }
@@ -145,7 +166,7 @@ export const LoginScreen: React.FC = () => {
               }}
               style={styles.submitBtn}
             />
-          </GlassCard>
+          </View>
 
           {/* Switch to Register */}
           <View style={styles.footerRow}>
@@ -166,7 +187,7 @@ export const LoginScreen: React.FC = () => {
       <AlertDialog
         visible={showForgotDialog}
         title="Password Reset Notice"
-        message="Self-service email password recovery is not yet configured on this backend instance. Please contact your system administrator or re-create your account if running in development mode."
+        message="Self-service email password recovery is not yet configured. Please contact support or re-create your account in development."
         onDismiss={() => setShowForgotDialog(false)}
         buttonLabel="Understood"
       />
@@ -186,43 +207,55 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
-    paddingTop: 8,
+    paddingTop: 12,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 24,
   },
-  header: {
-    marginBottom: 28,
+  brandHeader: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logoIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 6,
   },
   subtitle: {
-    marginTop: 6,
-    lineHeight: 20,
+    textAlign: 'center',
   },
-  formCard: {
-    padding: 20,
+  formArea: {
+    width: '100%',
     marginBottom: 24,
   },
   forgotBtn: {
     alignSelf: 'flex-end',
     marginTop: 4,
-    marginBottom: 20,
+    marginBottom: 22,
   },
   submitBtn: {
-    marginTop: 8,
+    marginTop: 4,
+    borderRadius: 14,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
 });
