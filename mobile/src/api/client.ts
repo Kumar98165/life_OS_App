@@ -23,28 +23,34 @@ function getExpoHostUri(): string | null {
 
 /**
  * Resolves the backend API base URL dynamically:
- * - On Web: uses localhost:5000
- * - In Expo Go on physical device: dynamically extracts your computer's Wi-Fi LAN IP (e.g. 192.168.1.103)
- * - Fallback: computer LAN IP 192.168.1.103:5000
+ * - On Web: uses localhost:5000 (or origin host if accessed via network IP on web)
+ * - In Expo Go on physical device: dynamically extracts your computer's Wi-Fi LAN IP from hostUri
+ * - Fallback: process.env.EXPO_PUBLIC_API_URL or current computer IP 192.168.1.25:5000
  */
 export function resolveApiBaseUrl(): string {
+  const os = getPlatformOS();
+  if (os === 'web') {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
+      const hostname = window.location.hostname;
+      return `http://${hostname}:5000/api/v1`;
+    }
+    return 'http://localhost:5000/api/v1';
+  }
+
+  // When running in Expo Go on Android / iOS, hostUri contains the dev server IP (e.g. 192.168.1.25:8081)
+  const hostUri = getExpoHostUri();
+  if (hostUri) {
+    const hostIp = hostUri.split(':')[0];
+    if (hostIp && !hostIp.includes('localhost') && !hostIp.includes('127.0.0.1')) {
+      return `http://${hostIp}:5000/api/v1`;
+    }
+  }
+
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
 
-  const os = getPlatformOS();
-  if (os === 'web') {
-    return 'http://localhost:5000/api/v1';
-  }
-
-  // When running in Expo Go on Android / iOS, hostUri contains the development server's IP and port (e.g. 192.168.1.103:8081)
-  const hostUri = getExpoHostUri();
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    return `http://${hostIp}:5000/api/v1`;
-  }
-
-  return 'http://192.168.1.103:5000/api/v1';
+  return 'http://192.168.1.25:5000/api/v1';
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
@@ -184,7 +190,6 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
       }
     }
-
     // Extract standardized message from backend error response
     const data = error.response?.data as any;
     const customMessage = data?.message || error.message || 'An unexpected error occurred';

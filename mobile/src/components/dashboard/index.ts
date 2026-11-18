@@ -8,4 +8,7 @@ export * from './HabitSummarySection';
 export * from './FinanceQuickCard';
 export * from './AnalyticsQuickCard';
 export * from './ProductivityModuleHub';
+export * from './DashboardTopSummaryCard';
+export * from './ModuleCategoryGroup';
+export * from './ModernDashboardHeader';
 

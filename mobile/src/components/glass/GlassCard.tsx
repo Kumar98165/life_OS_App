@@ -45,11 +45,11 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         styles.base,
         {
           borderRadius: theme.borderRadius.xl,
-          borderColor: theme.colors.glassBorder,
+          borderColor: theme.colors.border,
           backgroundColor:
             effectiveVariant === 'solid'
-              ? theme.colors.glassBackgroundSolid
-              : theme.colors.glassBackground,
+              ? theme.colors.surface
+              : theme.colors.surfaceSubtle,
         },
         shadowStyle,
         style,

@@ -3,4 +3,5 @@ export * from './SafeAreaContainer';
 export * from './ScrollContainer';
 export * from './SectionHeader';
 export * from './ResponsiveContainer';
+export * from './ScreenHeader';
 

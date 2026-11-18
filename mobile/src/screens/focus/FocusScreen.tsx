@@ -14,6 +14,7 @@ import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
   ScrollContainer,
+  ScreenHeader,
   GlassCard,
   Heading,
   BodyText,
@@ -215,10 +216,10 @@ export const FocusScreen: React.FC = () => {
   return (
     <SafeAreaContainer edges={['top']}>
       <ScrollContainer contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>Focus Mode</Heading>
-          <Caption color="secondary">Pomodoro timer, deep work & distraction blocker</Caption>
-        </View>
+        <ScreenHeader
+          title="Focus Mode"
+          subtitle="Pomodoro timer, deep work & distraction blocker"
+        />
 
         {/* Stats Row */}
         <View style={styles.statsRow}>

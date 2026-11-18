@@ -4,6 +4,7 @@ import { useRoute } from '@react-navigation/native';
 import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
+  ScreenHeader,
   Heading,
   BodyText,
   Caption,
@@ -36,11 +37,11 @@ export const PersonLedgerScreen: React.FC = () => {
 
   return (
     <SafeAreaContainer edges={['top']}>
+      <ScreenHeader
+        title={personName}
+        subtitle="People Ledger & Unified Profile"
+      />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>{personName}</Heading>
-          <Caption color="secondary">People Ledger & Unified Profile</Caption>
-        </View>
 
         {profile && (
           <GlassCard style={styles.summaryCard}>

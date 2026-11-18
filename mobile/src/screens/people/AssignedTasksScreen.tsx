@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
+  ScreenHeader,
   Heading,
   BodyText,
   Caption,
@@ -80,15 +81,18 @@ export const AssignedTasksScreen: React.FC = () => {
   return (
     <SafeAreaContainer edges={['top']}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>Assigned Tasks</Heading>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-            onPress={() => setShowCreate(!showCreate)}
-          >
-            <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader
+          title="Assigned Tasks"
+          subtitle="Delegated responsibilities"
+          rightAction={
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setShowCreate(!showCreate)}
+            >
+              <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
+            </TouchableOpacity>
+          }
+        />
 
         {showCreate && (
           <GlassCard style={styles.createCard}>

@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
+  ScreenHeader,
   Heading,
   BodyText,
   Caption,
@@ -105,15 +106,18 @@ export const MoneyScreen: React.FC = () => {
   return (
     <SafeAreaContainer edges={['top']}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>Lending & Borrowing</Heading>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-            onPress={() => setShowCreate(!showCreate)}
-          >
-            <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader
+          title="Lending & Borrowing"
+          subtitle="Money given & received"
+          rightAction={
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setShowCreate(!showCreate)}
+            >
+              <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
+            </TouchableOpacity>
+          }
+        />
 
         {dashboard.data && (
           <GlassCard style={styles.dashboardCard}>

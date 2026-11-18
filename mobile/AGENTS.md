@@ -20,6 +20,7 @@ npx tsc --noEmit            # typecheck
 npx expo-doctor             # diagnose dependency and config issues
 npx expo install --fix      # fix incompatible package versions
 ```
+npx expo start --tunnel ngrok
 
 Run lint and typecheck before declaring any task done.
 

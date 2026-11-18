@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
+  ScreenHeader,
   Heading,
   BodyText,
   Caption,
@@ -65,15 +66,18 @@ export const BillsScreen: React.FC = () => {
   return (
     <SafeAreaContainer edges={['top']}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>Bills & Utilities</Heading>
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-            onPress={() => setShowCreate(!showCreate)}
-          >
-            <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader
+          title="Bills & Utilities"
+          subtitle="Recurring payments & expenses"
+          rightAction={
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setShowCreate(!showCreate)}
+            >
+              <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
+            </TouchableOpacity>
+          }
+        />
 
         {showCreate && (
           <GlassCard style={styles.createCard}>

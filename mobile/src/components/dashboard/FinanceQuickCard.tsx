@@ -41,7 +41,7 @@ export const FinanceQuickCard: React.FC<FinanceQuickCardProps> = ({ onOpenFinanc
         </View>
 
         <BodyText color="secondary" style={styles.description}>
-          Track accounts, monitor monthly budgets, achieve savings goals, and get local AI spending insights.
+          Track accounts, monitor monthly budgets, achieve savings goals, and get real-time spending insights.
         </BodyText>
 
         <PrimaryButton

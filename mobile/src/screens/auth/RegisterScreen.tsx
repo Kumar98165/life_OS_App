@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +17,6 @@ import { useAuthStore } from '../../store';
 import {
   SafeAreaContainer,
   ScrollContainer,
-  GlassCard,
   GlassInput,
   PasswordInput,
   PrimaryButton,
@@ -69,7 +74,13 @@ export const RegisterScreen: React.FC = () => {
         <ScrollContainer contentContainerStyle={styles.scrollContent}>
           {/* Back Button */}
           <TouchableOpacity
-            style={[styles.backBtn, { borderColor: theme.colors.glassBorder }]}
+            style={[
+              styles.backBtn,
+              {
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.surfaceSubtle,
+              },
+            ]}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
             accessibilityLabel="Go back"
@@ -77,16 +88,26 @@ export const RegisterScreen: React.FC = () => {
             <Ionicons name="chevron-back" size={20} color={theme.colors.textPrimary} />
           </TouchableOpacity>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Heading level={1}>Create Account</Heading>
+          {/* Clean Modern Branding Header */}
+          <View style={styles.brandHeader}>
+            <View
+              style={[
+                styles.logoIconCircle,
+                { backgroundColor: `${theme.colors.primary}18` },
+              ]}
+            >
+              <Ionicons name="person-add" size={32} color={theme.colors.primary} />
+            </View>
+            <Heading level={1} style={styles.title}>
+              Create Account
+            </Heading>
             <BodyText color="secondary" style={styles.subtitle}>
-              Set up your profile to start personalizing LifeOS.
+              Sign up to get started
             </BodyText>
           </View>
 
-          {/* Form Card */}
-          <GlassCard elevation="floating" style={styles.formCard}>
+          {/* Unified Seamless Form Area */}
+          <View style={styles.formArea}>
             {/* Full Name */}
             <Controller
               control={control}
@@ -102,7 +123,7 @@ export const RegisterScreen: React.FC = () => {
                   onBlur={onBlur}
                   error={errors.full_name?.message}
                   leftIcon={
-                    <Ionicons name="person-outline" size={18} color={theme.colors.textMuted} />
+                    <Ionicons name="person-outline" size={19} color={theme.colors.textMuted} />
                   }
                 />
               )}
@@ -116,7 +137,7 @@ export const RegisterScreen: React.FC = () => {
                 <GlassInput
                   label="Email Address"
                   required
-                  placeholder="alex@example.com"
+                  placeholder="name@example.com"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -125,7 +146,7 @@ export const RegisterScreen: React.FC = () => {
                   onBlur={onBlur}
                   error={errors.email?.message}
                   leftIcon={
-                    <Ionicons name="mail-outline" size={18} color={theme.colors.textMuted} />
+                    <Ionicons name="mail-outline" size={19} color={theme.colors.textMuted} />
                   }
                 />
               )}
@@ -139,7 +160,7 @@ export const RegisterScreen: React.FC = () => {
                 <PasswordInput
                   label="Password"
                   required
-                  placeholder="Minimum 8 characters (letters & numbers)"
+                  placeholder="Minimum 8 characters"
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -147,7 +168,7 @@ export const RegisterScreen: React.FC = () => {
                   leftIcon={
                     <Ionicons
                       name="lock-closed-outline"
-                      size={18}
+                      size={19}
                       color={theme.colors.textMuted}
                     />
                   }
@@ -171,7 +192,7 @@ export const RegisterScreen: React.FC = () => {
                   leftIcon={
                     <Ionicons
                       name="shield-checkmark-outline"
-                      size={18}
+                      size={19}
                       color={theme.colors.textMuted}
                     />
                   }
@@ -181,7 +202,7 @@ export const RegisterScreen: React.FC = () => {
 
             {/* Password hint */}
             <Caption color="muted" style={styles.hintText}>
-              Must be at least 8 characters with at least one letter and one number.
+              At least 8 characters with letters & numbers.
             </Caption>
 
             {/* Submit Button */}
@@ -193,7 +214,7 @@ export const RegisterScreen: React.FC = () => {
               }}
               style={styles.submitBtn}
             />
-          </GlassCard>
+          </View>
 
           {/* Switch to Login */}
           <View style={styles.footerRow}>
@@ -225,29 +246,40 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 40,
-    paddingTop: 8,
+    paddingTop: 12,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 24,
   },
-  header: {
+  brandHeader: {
+    alignItems: 'center',
     marginBottom: 28,
   },
-  subtitle: {
-    marginTop: 6,
-    lineHeight: 20,
+  logoIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
-  formCard: {
-    padding: 20,
+  title: {
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  subtitle: {
+    textAlign: 'center',
+  },
+  formArea: {
+    width: '100%',
     marginBottom: 24,
   },
   hintText: {
@@ -257,11 +289,12 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 4,
+    borderRadius: 14,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
 });

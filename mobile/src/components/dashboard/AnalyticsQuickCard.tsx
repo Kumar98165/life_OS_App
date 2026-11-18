@@ -41,7 +41,7 @@ export const AnalyticsQuickCard: React.FC<AnalyticsQuickCardProps> = ({ onOpenAn
         </View>
 
         <BodyText color="secondary" style={styles.description}>
-          Calculate your 0-100 Life Score across productivity, habits, goals, and finance with local AI insights.
+          Calculate your 0-100 Life Score across productivity, habits, goals, and finance with deterministic analytics.
         </BodyText>
 
         <PrimaryButton

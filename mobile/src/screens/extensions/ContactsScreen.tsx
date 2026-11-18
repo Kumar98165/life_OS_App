@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import {
   SafeAreaContainer,
+  ScreenHeader,
   Heading,
   BodyText,
   Caption,
@@ -63,19 +64,29 @@ export const ContactsScreen: React.FC = () => {
 
   return (
     <SafeAreaContainer edges={['top']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Heading level={1}>Contacts</Heading>
+      <ScreenHeader
+        title="Contacts"
+        subtitle="Manage your address book"
+        rightAction={
           <TouchableOpacity
             style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => setShowCreate(!showCreate)}
           >
-            <Ionicons name={showCreate ? 'close' : 'add'} size={24} color="#FFF" />
+            <Ionicons name={showCreate ? 'close' : 'add'} size={22} color="#FFF" />
           </TouchableOpacity>
-        </View>
-
+        }
+      />
+      <View style={styles.container}>
         <TextInput
-          style={[styles.searchInput, { backgroundColor: theme.colors.surface, color: theme.colors.textPrimary }]}
+          style={[
+            styles.searchInput,
+            {
+              backgroundColor: theme.colors.surfaceSubtle,
+              borderColor: theme.colors.border,
+              borderWidth: 1,
+              color: theme.colors.textPrimary,
+            },
+          ]}
           placeholder="Search contacts..."
           placeholderTextColor={theme.colors.textMuted}
           value={search}
